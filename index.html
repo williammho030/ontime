@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="準時收：建造業付款申索同期限追蹤（示範版）">
-<meta property="og:title" content="準時收 OnTime Claims">
+<meta name="description" content="穩陣收：建造業付款申索同期限追蹤（示範版）">
+<meta property="og:title" content="穩陣收 OnTime Claims">
 <meta property="og:description" content="建造業付款申索同期限追蹤（示範版）">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2a4a'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E%E6%BA%96%3C/text%3E%3C/svg%3E">
-<title>準時收 OnTime Claims</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2a4a'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E%E7%A9%A9%3C/text%3E%3C/svg%3E">
+<title>穩陣收 OnTime Claims</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -255,7 +255,7 @@ const today = () => add(BASE, S.shift);
 /* ---------- strings ---------- */
 const T = {
 zh:{
- brand:"準時收", company:"陳氏電器工程有限公司（虛構）", demoPill:"示範 · 虛構資料",
+ brand:"穩陣收", company:"陳氏電器工程有限公司（虛構）", demoPill:"示範 · 虛構資料",
  demoDate:"示範日期", dateHint:"撳「+7 日」「+30 日」睇吓期限到咗會點", today:"今日", p7:"+7 日", p30:"+30 日",
  t_overview:"總覽", t_out:"發出申索", t_in:"收到申索", t_ret:"保留金", t_jobs:"工程",
  ov_h:"今日要處理", ov_sub:"系統按每份合約嘅條款自動計住回覆同付款限期（條例上限：回覆 30 日、付款 60 日），同每筆保留金幾時應該發還。",
@@ -287,7 +287,7 @@ zh:{
  a_limit:"{j}：保留金 {amt} 追討時限估計尚餘 {n} 日", a_limitD:"應於 {d} 發還，一直未收。一般合約申索時效係 6 年（須律師確認）。",
  a_retMore:"另外仲有 {n} 筆保留金已逾期，共 {amt}", a_retMoreD:"大部分係唔受條例保障嘅舊工程，可以先寄催收信。", goRet:"睇保留金",
  doc_claim:"付款申索", doc_resp:"付款回應", doc_adj:"審裁資料包（摘要）", doc_letter:"要求發還保留金",
- close:"關閉", t_wa:"WhatsApp／電郵", wa_h:"喺 WhatsApp 或電郵用", wa_sub:"判頭唔使學新嘢：申索照舊喺 WhatsApp 或電郵收發，轉寄俾「準時收」就自動記錄、計限期、到期前提你。", em_s1:"① 你嘅收件箱收到申索電郵", em_s2:"② 照平時咁撳轉寄，寄去你公司專屬嘅準時收地址", em_s3:"③ 準時收自動記錄，並回覆你；申索會出現喺準時收網站", em_app:"你嘅電郵 app（Gmail／Outlook 等）", em_sys:"準時收 自動回覆（喺你嘅電郵 app 收到）", em_fwdBtn:"轉寄", em_send:"傳送", em_view:"喺系統睇", em_date:"日期", em_orig:"---------- 轉寄郵件 ----------", em_dateNote:"限期由原本收到嘅時間計（{dt}），唔係由轉寄時間計。", em_tip:"貼士：喺 Gmail／Outlook 設定自動轉寄規則（例如由大判同判頭寄嚟嘅電郵），以後連轉寄都唔使。", em_h:"電郵都得", em_sub:"每間公司有自己嘅轉寄地址。收到申索電郵，轉寄或者 CC 一份就得。", em_from:"寄件人", em_to:"收件人", em_subj:"主旨", em_fwd:"轉寄俾準時收", em_logged:"✅ 已記錄：新成鐵器（虛構）申索 #3，{amt}。回覆限期：{d}。", em_reply:"準時收 自動回覆", em_body:"附件：新成_申索第3號.pdf\n請查收本月付款申索，金額 HK$58,000。", wa_bot:"準時收 助手", wa_status:"示範：喺你自己嘅 WhatsApp 轉寄俾呢個號碼", wa_hi:"你好！我係準時收助手👋\n收到或者發出付款申索，直接轉寄俾我就得。我會記錄、計限期，到期前提你。", wa_hint:"撳下面「下一步」開始示範 👇", wa_next:"下一步", wa_reset:"重新開始", wa_done:"示範完畢。撳「重新開始」再睇一次。",
+ close:"關閉", t_wa:"WhatsApp／電郵", wa_h:"喺 WhatsApp 或電郵用", wa_sub:"判頭唔使學新嘢：申索照舊喺 WhatsApp 或電郵收發，轉寄俾「穩陣收」就自動記錄、計限期、到期前提你。", em_s1:"① 你嘅收件箱收到申索電郵", em_s2:"② 照平時咁撳轉寄，寄去你公司專屬嘅穩陣收地址", em_s3:"③ 穩陣收自動記錄，並回覆你；申索會出現喺穩陣收網站", em_app:"你嘅電郵 app（Gmail／Outlook 等）", em_sys:"穩陣收 自動回覆（喺你嘅電郵 app 收到）", em_fwdBtn:"轉寄", em_send:"傳送", em_view:"喺系統睇", em_date:"日期", em_orig:"---------- 轉寄郵件 ----------", em_dateNote:"限期由原本收到嘅時間計（{dt}），唔係由轉寄時間計。", em_tip:"貼士：喺 Gmail／Outlook 設定自動轉寄規則（例如由大判同判頭寄嚟嘅電郵），以後連轉寄都唔使。", em_h:"電郵都得", em_sub:"每間公司有自己嘅轉寄地址。收到申索電郵，轉寄或者 CC 一份就得。", em_from:"寄件人", em_to:"收件人", em_subj:"主旨", em_fwd:"轉寄俾穩陣收", em_logged:"✅ 已記錄：新成鐵器（虛構）申索 #3，{amt}。回覆限期：{d}。", em_reply:"穩陣收 自動回覆", em_body:"附件：新成_申索第3號.pdf\n請查收本月付款申索，金額 HK$58,000。", wa_bot:"穩陣收 助手", wa_status:"示範：喺你自己嘅 WhatsApp 轉寄俾呢個號碼", wa_hi:"你好！我係穩陣收助手👋\n收到或者發出付款申索，直接轉寄俾我就得。我會記錄、計限期，到期前提你。", wa_hint:"撳下面「下一步」開始示範 👇", wa_next:"下一步", wa_reset:"重新開始", wa_done:"示範完畢。撳「重新開始」再睇一次。",
  wa_s1u:"（轉寄）志強電線工程 申索第4號", wa_s1b:"✅ 已記錄：志強電線工程（虛構）申索 #4，{amt}。\n你嘅付款回應限期：{d}（{n} 日）。\n到期前會再提你。", wa_open:"開啟申索",
  wa_s2skip:"⏩ 25 日後", wa_s2b:"⏰ 提提你：志強申索 #4 嘅付款回應限期係 {d}，仲有 {n} 日。\n記得每項扣數都要寫理由，否則可能失去抗辯權利。", wa_reply:"擬備付款回應",
  wa_s3u:"我啱啱電郵咗本月 claim 俾大判 B（附件）", wa_s3b:"✅ 已記錄：申索 #{no}，{amt}，送達 {sd}。\n總承建商 B 需喺 {d} 前回覆，{p} 前付款。",
@@ -508,7 +508,7 @@ function renderHeader(){
     b.onclick = () => go(k); nav.appendChild(b);
   });
   document.getElementById("foot").innerHTML = `${esc(t("foot1"))}<br>${esc(t("foot2"))}`;
-  document.title = S.lang==="zh" ? "準時收 OnTime Claims" : "OnTime Claims";
+  document.title = S.lang==="zh" ? "穩陣收 OnTime Claims" : "OnTime Claims";
 }
 
 function clockHTML(c, s){
@@ -604,7 +604,7 @@ function waTime(){ const d = new Date(); return d.toTimeString().slice(0,5); }
 function viewWA(){
   main.innerHTML = `<h1>${esc(t("wa_h"))}</h1><p class="sub">${esc(t("wa_sub"))}</p>
     <div class="phone">
-      <div class="ph-head"><div class="ph-av">準</div><div><div class="ph-name">${esc(t("wa_bot"))}</div><div class="ph-st">${esc(t("wa_status"))}</div></div></div>
+      <div class="ph-head"><div class="ph-av">穩</div><div><div class="ph-name">${esc(t("wa_bot"))}</div><div class="ph-st">${esc(t("wa_status"))}</div></div></div>
       <div class="chat" id="chat" aria-live="polite"></div>
       <div class="ph-foot"><button type="button" class="btn" id="waNext">${esc(t("wa_next"))} (${Math.min(WA.step+1,4)}/4)</button>
       <button type="button" class="btn ghost" id="waReset">${esc(t("wa_reset"))}</button></div>
