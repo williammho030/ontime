@@ -536,17 +536,17 @@ function viewOverview(){
   claimsIn.forEach(c => { const s=inStatus(c); if (s.key==="open" && s.n<=14) dl++; });
   const top = alerts.slice(0,3), rest = alerts.slice(3);
   main.innerHTML = `
-    <div class="todaycard">
-      <h2>${esc(alerts.length ? t("ov_today",{n:alerts.length}) : t("nothing"))}</h2>
-      <div class="section" id="alertsTop" style="margin:0"></div>
-      ${rest.length ? `<details class="more"><summary>${esc(t("ov_more",{n:rest.length}))}</summary><div class="section" id="alertsRest" style="margin:0"></div></details>` : ""}
-    </div>
     <h2 style="margin-bottom:10px">${esc(t("ov_numbers"))}</h2>
     <div class="stats">
       <div class="stat"><div class="k">${esc(t("st_unpaid"))}</div><div class="v">${money(unpaid)}</div></div>
       <div class="stat"><div class="k">${esc(t("st_ret"))}</div><div class="v">${money(retHeld)}</div></div>
       <div class="stat warn"><div class="k">${esc(t("st_retOver"))}</div><div class="v">${money(retOver)}</div></div>
       <div class="stat"><div class="k">${esc(t("st_dl"))}</div><div class="v">${dl}</div></div>
+    </div>
+    <div class="todaycard">
+      <h2>${esc(alerts.length ? t("ov_today",{n:alerts.length}) : t("nothing"))}</h2>
+      <div class="section" id="alertsTop" style="margin:0"></div>
+      ${rest.length ? `<details class="more"><summary>${esc(t("ov_more",{n:rest.length}))}</summary><div class="section" id="alertsRest" style="margin:0"></div></details>` : ""}
     </div>
     <p class="meta">${esc(t("ov_sub"))}</p>`;
   const draw = (list, box) => list.forEach(a => {
