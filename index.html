@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="穩陣收：建造業付款申索同期限追蹤（示範版）">
-<meta property="og:title" content="穩陣收 Savetime">
+<meta property="og:title" content="穩陣收 SteadyClaim">
 <meta property="og:description" content="建造業付款申索同期限追蹤（示範版）">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2a4a'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E%E7%A9%A9%3C/text%3E%3C/svg%3E">
-<title>穩陣收 Savetime</title>
+<title>穩陣收 SteadyClaim</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -76,7 +76,18 @@ h2{font-size:17px;font-weight:700;margin:0;text-wrap:balance}
 @media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .stat{background:var(--surface-2);border-radius:var(--radius);padding:14px 16px;min-width:0}
 .stat .k{font-size:13px;color:var(--muted)}
-.stat .v{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;margin-top:2px;overflow-wrap:anywhere}
+.stat .v{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;margin-top:2px;white-space:nowrap}
+.amtbox{text-align:right}
+.chk{list-style:none;margin:10px 0 0;padding:0;font-size:14px}
+.chk li{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:4px 0;border-top:1px solid var(--line)}
+.chk li:first-child{border-top:0}
+.chk .ok{color:var(--green);font-weight:700}.chk .bad{color:var(--amber);font-weight:700}
+.chkbox{background:var(--surface-2);border-radius:var(--radius);padding:12px 14px;margin-top:12px}
+.chkbox h3{margin:0;font-size:15px}
+.verdict{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:14px}
+.verdict.good{background:var(--green-soft)}.verdict.warn{background:var(--amber-soft)}
+@media (max-width:600px){.stat{padding:12px}.stat .v{font-size:clamp(15px,4.6vw,19px)}.amtbox{text-align:left;width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.amtbox .status{margin-top:0}
+ table.vo thead{display:none} table.vo,table.vo tbody,table.vo tr,table.vo td{display:block;width:100%} table.vo tr{padding:12px 14px;border-bottom:1px solid var(--line)} table.vo tr:last-child{border-bottom:0} table.vo td{border:0!important;padding:2px 0!important;text-align:left!important} table.vo td[data-l]{padding-top:6px!important} table.vo td[data-l]::before{content:attr(data-l);display:block;color:var(--muted);font-size:12px;font-weight:400} table.vo td:first-child{font-weight:700}}
 .stat.warn{background:var(--red-soft)}
 .stat.warn .v{color:var(--red)}
 
@@ -150,6 +161,10 @@ footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);paddin
 .paper table{border-collapse:collapse;width:100%;min-width:420px;margin:6px 0}
 .paper td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 .paper td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.paper table.items{min-width:660px;font-size:13px}
+.paper table.items th{font-size:12px;font-weight:700;text-align:left;padding:5px 6px;background:var(--surface-2);border-bottom:1px solid var(--line);vertical-align:bottom;line-height:1.35}
+.paper table.items th.n{text-align:right}
+.paper .stmt{font-size:14px;border-left:3px solid var(--line);padding-left:10px}
 .paper tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .paper .lbl{color:var(--muted)}
 .paper .warn{margin-top:14px;font-size:12.5px;color:var(--amber)}
@@ -249,7 +264,7 @@ const addYears = (s,n) => { const [y,m,d]=s.split("-"); return `${+y+n}-${m}-${d
 
 /* ---------- state ---------- */
 const S = { lang:"zh", shift:0, tab:"overview" };
-try { const l = localStorage.getItem("ontime-lang"); if (l==="en"||l==="zh") S.lang=l; } catch(e){}
+try { const l = localStorage.getItem("steadyclaim-lang"); if (l==="en"||l==="zh") S.lang=l; } catch(e){}
 const today = () => add(BASE, S.shift);
 
 /* ---------- strings ---------- */
@@ -258,95 +273,101 @@ zh:{
  brand:"穩陣收", company:"陳氏電器工程有限公司（虛構）", demoPill:"示範 · 虛構資料",
  demoDate:"示範日期", dateHint:"撳「+7 日」「+30 日」睇吓期限到咗會點", today:"今日", p7:"+7 日", p30:"+30 日",
  t_overview:"總覽", t_out:"發出申索", t_in:"收到申索", t_ret:"保留金", t_jobs:"工程",
- ov_h:"今日要處理", ov_sub:"系統按每份合約嘅條款自動計住回覆同付款限期（條例上限：回覆 30 日、付款 60 日），同每筆保留金幾時應該發還。",
+ ov_h:"今日要處理", ov_sub:"系統自動計住每份申索嘅 30 日、60 日限期，同每筆保留金幾時應該發還。",
  st_unpaid:"已申索未收", st_ret:"被扣起嘅保留金", st_retOver:"逾期未還保留金", st_dl:"14 日內嘅期限",
  nothing:"暫時冇嘢要處理。",
- out_h:"發出嘅付款申索", out_sub:"每月申索 → 合約訂明嘅回覆期（最長 30 日）：對方要回覆 → 付款期（最長 60 日）：要付款。逾期即刻提你。",
- in_h:"收到嘅付款申索（你嘅判頭）", in_sub:"你嘅判頭向你申索，你都要喺合約訂明期限內（最長 30 日）書面回覆，每項扣數都要寫明理由。",
+ out_h:"發出嘅付款申索", out_sub:"每月申索 → 第 30 日：對方要回覆 → 第 60 日：要付款。逾期即刻提你。",
+ in_h:"收到嘅付款申索（你嘅判頭）", in_sub:"你嘅判頭向你申索，你都要喺 30 日內書面回覆，每項扣數都要寫明理由。",
  ret_h:"保留金記錄（所有工程）", ret_sub:"包括唔受條例保障嘅舊工程。到期提你，臨近追討時限再提你。信由你自己簽名寄出。",
  jobs_h:"工程", jobs_sub:"邊啲工程受《建造業付款保障條例》保障，一眼睇晒。",
  newClaim:"新增本月申索", job:"工程", period:"申索期間", cum:"累計完成合約工程 (HK$)", vari:"更改工程 (HK$)", prev:"減：之前已付 (HK$)",
- retLess:"減：保留金", claimAmt:"本期申索金額", genServe:"產生申索文件", formHint:"填三個數，系統自動計保留金同申索金額，再出一份符合條例要求嘅申索文件。",
+ retLess:"減：保留金", claimAmt:"本期申索金額", genServe:"產生申索文件", formHint:"輸入你自己嘅三個數。系統幫你計保留金、排版，送出前再幫你檢查一次。",
  viewDoc:"睇申索文件", adjPack:"準備審裁資料包", replyBtn:"擬備付款回應", letterBtn:"擬備催收信", markPaid:"標記已收",
  clkResp:"回覆", clkPay:"付款", claimNo:"申索", served:"送達", respDue:"回覆限期", payDue:"付款限期", day:"第 {n} 日", daysLeft:"尚餘 {n} 日", daysAgo:"已過 {n} 日",
- stPaid:"已收款", stLateResp:"回覆逾期", stWaitResp:"等緊回覆", stNoResp:"對方未有回覆", stWaitPay:"等緊付款", stPayLate:"逾期未付", stCut:"被扣 {a}",
- inDue:"你嘅回覆限期", inDone:"已回覆", inRespLate:"逾期回覆", inLate:"已過回覆限期", from:"來自",
+ stPaid:"已收款", stWaitResp:"等緊回覆", stNoResp:"對方未有回覆", stWaitPay:"等緊付款", stPayLate:"逾期未付", stCut:"被扣 {a}",
+ inDue:"你嘅回覆限期", inDone:"已回覆", inLate:"已過回覆限期", from:"來自",
  retDue:"應發還日期", retLimit:"追討時限（估計）", retNotDue:"未到期", retOver:"逾期 {n} 個月", retSoon:"即將到期", retPaid:"已收回", retNear:"時限將至",
  covered:"受條例保障", notCovered:"唔受條例保障", mainDate:"總合約簽訂", sum:"分判合約金額", builder:"總承建商",
  chk_h:"快速檢查：份合約受唔受保障？", chk_q1:"總合約係咪 2025年8月28日或之後簽？", chk_q2:"總合約金額係咪 HK$500 萬或以上？（只係供應物料：HK$50 萬）",
- chk_q3:"係咪私人工程，而且係現有住宅樓宇嘅工程，或者現有非住宅樓宇唔使屋宇署批准嘅小型工程？", yes:"係", no:"唔係", unsure:"唔肯定",
+ chk_q3:"（私人工程）係咪現有住宅單位或公用部分嘅工程，或者現有樓宇入面唔使屋宇署批准嘅裝修、維修？", yes:"係", no:"唔係", unsure:"唔肯定",
  chk_yes:"好可能受保障：可以用條例嘅付款申索同審裁。", chk_no:"好可能唔受保障：仍然可以用保留金記錄追數。", chk_unsure:"未能確定：建議問律師。", chk_wait:"答晒三條就有結果。",
  chk_note:"一般資料，唔係法律意見。",
- a_noResp:"{b} 未有喺限期內回覆申索 #{no}", a_lateResp:"{b} 逾期先回覆申索 #{no}", a_noRespD:"申索 {amt}。對方可能已經唔可以喺審裁中提出抵銷。開展審裁限期約 {d}（{left}）。",
+ a_noResp:"{b} 未有喺 30 日內回覆申索 #{no}", a_noRespD:"申索 {amt}。對方已經唔可以喺審裁中提出抵銷。開展審裁限期約 {d}（{left}）。",
  a_cut:"申索 #{no} 被扣 {amt}", a_cutD:"對方理由：{r}。如要爭議，開展審裁限期約 {d}（{left}）。",
- a_payLate:"{b} 逾期未付已承認嘅 {amt}", a_payLateD:"申索 #{no}。可以開展審裁，或者提前 5 個工作天書面通知暫停工程。",
+ a_payLate:"{b} 逾期未付已承認嘅 {amt}", a_payLateD:"申索 #{no}。可以喺約 {d} 前開展審裁（{left}），或者提前最少 5 個工作天書面通知暫停工程。",
  a_paySoon:"{amt} 應該喺 {d} 前收到", a_paySoonD:"{b} · 申索 #{no}（{left}）",
  a_respSoon:"申索 #{no} 嘅回覆限期係 {d}", a_respSoonD:"{b} · {amt}（{left}）",
- a_inLate:"你已錯過回覆 {f} 申索 #{no} 嘅限期", a_inRespLate:"你回覆 {f} 申索 #{no} 時已經過咗限期", a_inLateD:"{amt}。你可能已經唔可以喺審裁中提出抵銷，盡快搵律師。",
- a_inSoon:"{n} 日內要回覆 {f} 嘅申索 #{no}", a_inSoonD:"{amt}。每項扣數都要寫明理由，否則可能失去抗辯權利。",
+ a_inLate:"你已錯過回覆 {f} 申索 #{no} 嘅限期", a_inLateD:"{amt}。你可能已經唔可以喺審裁中提出抵銷，盡快搵律師。",
+ a_inSoon:"{n} 日內要回覆 {f} 嘅申索 #{no}", a_inSoonD:"{amt}。每項扣數都要寫明理由，否則審裁時可能當你冇回覆，唔可以再提出抵銷。",
  a_limit:"{j}：保留金 {amt} 追討時限估計尚餘 {n} 日", a_limitD:"應於 {d} 發還，一直未收。一般合約申索時效係 6 年（須律師確認）。",
  a_retMore:"另外仲有 {n} 筆保留金已逾期，共 {amt}", a_retMoreD:"大部分係唔受條例保障嘅舊工程，可以先寄催收信。", goRet:"睇保留金",
  doc_claim:"付款申索", doc_resp:"付款回應", doc_adj:"審裁資料包（摘要）", doc_letter:"要求發還保留金",
  close:"關閉", t_wa:"WhatsApp／電郵", wa_h:"喺 WhatsApp 或電郵用", wa_sub:"判頭唔使學新嘢：申索照舊喺 WhatsApp 或電郵收發，轉寄俾「穩陣收」就自動記錄、計限期、到期前提你。", em_s1:"① 你嘅收件箱收到申索電郵", em_s2:"② 照平時咁撳轉寄，寄去你公司專屬嘅穩陣收地址", em_s3:"③ 穩陣收自動記錄，並回覆你；申索會出現喺穩陣收網站", em_app:"你嘅電郵 app（Gmail／Outlook 等）", em_sys:"穩陣收 自動回覆（喺你嘅電郵 app 收到）", em_fwdBtn:"轉寄", em_send:"傳送", em_view:"喺系統睇", em_date:"日期", em_orig:"---------- 轉寄郵件 ----------", em_dateNote:"限期由原本收到嘅時間計（{dt}），唔係由轉寄時間計。", em_tip:"貼士：喺 Gmail／Outlook 設定自動轉寄規則（例如由大判同判頭寄嚟嘅電郵），以後連轉寄都唔使。", em_h:"電郵都得", em_sub:"每間公司有自己嘅轉寄地址。收到申索電郵，轉寄或者 CC 一份就得。", em_from:"寄件人", em_to:"收件人", em_subj:"主旨", em_fwd:"轉寄俾穩陣收", em_logged:"✅ 已記錄：新成鐵器（虛構）申索 #3，{amt}。回覆限期：{d}。", em_reply:"穩陣收 自動回覆", em_body:"附件：新成_申索第3號.pdf\n請查收本月付款申索，金額 HK$58,000。", wa_bot:"穩陣收 助手", wa_status:"示範：喺你自己嘅 WhatsApp 轉寄俾呢個號碼", wa_hi:"你好！我係穩陣收助手👋\n收到或者發出付款申索，直接轉寄俾我就得。我會記錄、計限期，到期前提你。", wa_hint:"撳下面「下一步」開始示範 👇", wa_next:"下一步", wa_reset:"重新開始", wa_done:"示範完畢。撳「重新開始」再睇一次。",
- wa_s1u:"（轉寄）志強電線工程 申索第4號", wa_s1b:"✅ 已記錄：志強電線工程（虛構）申索 #4，{amt}。\n你嘅付款回應限期：{d}（{n} 日）。\n到期前會再提你。", wa_open:"開啟申索",
- wa_s2skip:"⏩ 25 日後", wa_s2b:"⏰ 提提你：志強申索 #4 嘅付款回應限期係 {d}，仲有 {n} 日。\n記得每項扣數都要寫理由，否則可能失去抗辯權利。", wa_reply:"擬備付款回應",
- wa_s3u:"我啱啱電郵咗本月 claim 俾大判 B（附件）", wa_s3b:"✅ 已記錄：申索 #{no}，{amt}，送達 {sd}。\n總承建商 B 需喺 {d} 前回覆，{p} 前付款。",
- wa_s4skip:"⏩ 31 日後", wa_s4b:"⚠️ 總承建商 B 未有喺限期內回覆申索 #{no}。\n佢可能已經唔可以喺審裁提出抵銷。開展審裁限期約 {d}。", wa_adj:"睇審裁資料包",
- ov_today:"今日有 {n} 件事要處理", ov_more:"查看其餘 {n} 項", ov_numbers:"數字一覽", evBtn:"證據 ({n})", evTitle:"證據及附件", evNone:"未有附件。", evAdd:"加入檔案（相片、PDF、Excel）", evNote:"每份申索嘅估值表、相片、地盤日誌、指示同 WhatsApp 截圖都放喺度。如果去到審裁，資料已經齊。", evAdded:"已加入 {n} 個檔案",
- logBtn:"＋ 記錄收到嘅申索", logTitle:"記錄收到嘅付款申索", logHint:"一收到申索（電郵、WhatsApp 或親手交）就記低，回覆限期即刻開始計。", howLbl:"點樣收到", h_email:"電郵", h_whatsapp:"WhatsApp", h_hand:"親手送達", h_post:"郵寄", filesLbl:"申索文件及附件", logSave:"記錄並開始計時", logged:"已記錄。你嘅回覆限期：{d}", jobLbl:"工程",
+ wa_s1u:"（轉寄）志強電線工程 申索第4號", wa_s1b:"✅ 已記錄：志強電線工程（虛構）申索 #4，{amt}。\n你嘅付款回應限期：{d}（30 日）。\n⚠️ 呢份經 WhatsApp 收到，未必算正式送達，但穩陣起見照樣計限期。\n到期前會再提你。", wa_open:"開啟申索",
+ wa_s2skip:"⏩ 25 日後", wa_s2b:"⏰ 提提你：志強申索 #4 嘅付款回應限期係 {d}，仲有 5 日。\n記得每項扣數都要寫理由，否則審裁時可能當你冇回覆，唔可以再提出抵銷。", wa_reply:"擬備付款回應",
+ wa_s3u:"我啱啱電郵咗本月 claim 俾大判 B（附件）", wa_s3b:"✅ 已記錄：申索 #{no}，{amt}，經電郵送達 {sd}（已存送達記錄）。\n總承建商 B 需喺 {d} 前回覆，{p} 前付款。",
+ wa_s4skip:"⏩ 31 日後", wa_s4b:"⚠️ 總承建商 B 未有喺 30 日內回覆申索 #{no}。\n佢已經唔可以喺審裁提出抵銷。開展審裁限期約 {d}。", wa_adj:"睇審裁資料包",
+ ov_today:"今日有 {n} 件事要處理（{u} 件緊急）", ov_more:"查看其餘 {n} 項", ov_numbers:"數字一覽", evBtn:"證據 ({n})", evTitle:"證據及附件", evNone:"未有附件。", evAdd:"加入檔案（相片、PDF、Excel）", evNote:"每份申索嘅估值表、相片、地盤日誌、指示同 WhatsApp 截圖都放喺度。如果去到審裁，資料已經齊。", evAdded:"已加入 {n} 個檔案",
+ logBtn:"＋ 記錄收到嘅申索", logTitle:"記錄收到嘅付款申索", logHint:"一收到申索（電郵、WhatsApp 或親手交）就記低，30 日回覆限期即刻開始計。", howLbl:"點樣收到", h_email:"電郵", h_whatsapp:"WhatsApp", h_hand:"親手送達", h_post:"掛號郵寄", filesLbl:"申索文件及附件", logSave:"記錄並開始計時", logged:"已記錄。你嘅回覆限期：{d}", jobLbl:"工程",
+ svcLbl:"送達方法", chk_h:"送出前檢查", chk_bill:"截數日：{d}（合約冇寫明就用每月最後一日）", chk_one:"本期第一份申索", chk_two:"本期已有申索 #{no}：同一期第二份可能會被忽略", chk_calc:"已列明金額點樣計（工程、更改工程、保留金、已付）", chk_adj:"冇包括審裁中或已裁定嘅款項（文件已加聲明）", chk_svcOk:"送達方法：{m}，系統會記錄日期、時間同收件人", chk_svcWa:"WhatsApp 未必算正式送達（除非合約寫明）。建議用電郵或掛號再寄一次",
+ svcRec:"送達：{m} · {d}", rc_btn:"回應檢查", rc_title:"付款回應檢查（第19條）", rc_id:"指明係回應邊份申索", rc_amt:"列明承認金額", rc_diff:"列明同申索金額嘅差額", rc_calc:"列明承認金額點樣計", rc_time:"喺限期內送達（{d} 或之前）", rc_good:"回應符合基本要求。", rc_bad:"呢份回應可能唔符合第19條：對方會被當作爭議成筆申索，審裁時唔可以提出抵銷。", rc_flag:"回應有問題",
+ waSvc:"⚠️ 經 WhatsApp 收到：未必算正式送達。穩陣起見，照樣計 30 日限期。", billDate:"截數日", svcMethod:"送達方法", declare:"本申索不包括任何正在審裁或已獲裁定的款項。",
  vo_h:"更改工程記錄", vo_sub:"每項更改工程連指示來源同狀態。口頭或 WhatsApp 指示最易被扣數，要盡快攞書面確認。", vo_no:"編號", vo_desc:"內容", vo_by:"指示來源", vo_amt:"金額", vo_st:"狀態", st_agreed:"已確認", st_pending:"待確認", st_disputed:"有爭議", vo_add:"新增更改工程", vo_save:"加入", vo_date:"指示日期", vo_tot:"已確認 {a} · 待確認 {b} · 有爭議 {c}",
- dedH:"扣數項目（每項都要有理由）", dedReason:"理由", dedAmt:"金額 (HK$)", dedEv:"證據", dedAdd:"＋ 加一項扣數", dedNone:"（冇證據）", admCalc:"承認金額：{a}（申索 {c} 減扣數 {d}）", backEdit:"返回修改", chop:"蓋印", unchop:"移除蓋印", chopNote:"公司印喺「設定」上載一次，之後每份文件一按就蓋上。", t_set:"設定", set_h:"設定", youAre:"示範用戶：陳先生（老闆）", chop_h:"公司印及簽名", chop_sub:"喺白紙蓋一次公司印、老闆簽名，用手機影相上載。系統會自動裁剪同去除白色背景。", chop_sample:"現用：示範印章（虛構）", chop_yours:"現用：你上載嘅印章", chop_preview:"新印章預覽（已去除背景）", chop_upload:"上載印章相片", chop_use:"確認使用", chop_cancel:"取消", chop_reset:"還原示範印章", chop_delete:"刪除公司印", chop_none:"未設定公司印。文件只可以下載後親手蓋印。", chop_bad:"張相讀取唔到，請用白紙清楚影過", chop_saved:"已更新公司印", terms:"付款條款：回覆 {r} 日 · 付款 {p} 日", auth_h:"邊個可以蓋印", auth_note:"只限老闆授權嘅人。員工離職可以即刻取消。", confirmEach:"每次蓋印前要再確認一次", confirmChop:"再撳一次確認蓋印", log_h:"蓋印記錄", log_none:"暫時未有記錄。打開任何文件撳「蓋印」試吓。", owner:"老闆", dlPdf:"下載 PDF", dlWord:"下載 Word", preparing:"準備中…", saved:"已下載", dlFail:"下載唔成功，請再試", dlNA:"呢個檢視方式用唔到下載功能。", dlHint:"正式使用時：下載後簽署或蓋公司印，再用電郵或 WhatsApp 寄出。", recvDetails:"收到嘅申索資料（有錯可以先改）", fromLbl:"判頭名稱", claimNoLbl:"申索編號", servedLbl:"收到日期", amtLbl:"申索金額 (HK$)", yourResp:"你嘅付款回應", viewResp:"睇付款回應", draftNote:"示範範本，未經律師審閱。期限按《建造業付款保障條例》（第652章）及建造業議會資料計算，條文及計算方法須由律師確認。",
+ dedH:"扣數項目（每項都要有理由）", dedReason:"理由", dedAmt:"金額 (HK$)", dedEv:"證據", dedAdd:"＋ 加一項扣數", dedNone:"（冇證據）", admCalc:"承認金額：{a}（申索 {c} 減扣數 {d}）", backEdit:"返回修改", chop:"蓋印", unchop:"移除蓋印", chopNote:"公司印喺「設定」上載一次，之後每份文件一按就蓋上。", t_set:"設定", set_h:"設定", youAre:"示範用戶：陳先生（老闆）", chop_h:"公司印及簽名", chop_sub:"喺白紙蓋一次公司印、老闆簽名，用手機影相上載。系統會自動裁剪同去除白色背景。", chop_sample:"現用：示範印章（虛構）", chop_yours:"現用：你上載嘅印章", chop_preview:"新印章預覽（已去除背景）", chop_upload:"上載印章相片", chop_use:"確認使用", chop_cancel:"取消", chop_reset:"還原示範印章", chop_delete:"刪除公司印", chop_none:"未設定公司印。文件只可以下載後親手蓋印。", chop_bad:"張相讀取唔到，請用白紙清楚影過", chop_saved:"已更新公司印", auth_h:"邊個可以蓋印", auth_note:"只限老闆授權嘅人。員工離職可以即刻取消。", confirmEach:"每次蓋印前要再確認一次", confirmChop:"再撳一次確認蓋印", log_h:"蓋印記錄", log_none:"暫時未有記錄。打開任何文件撳「蓋印」試吓。", owner:"老闆", dlPdf:"下載 PDF", dlWord:"下載 Word", preparing:"準備中…", saved:"已下載", dlFail:"下載唔成功，請再試", dlNA:"呢個檢視方式用唔到下載功能。", dlHint:"正式使用時：下載後簽署或蓋公司印，再用電郵或 WhatsApp 寄出。", recvDetails:"收到嘅申索資料（有錯可以先改）", fromLbl:"判頭名稱", claimNoLbl:"申索編號", servedLbl:"收到日期", amtLbl:"申索金額 (HK$)", yourResp:"你嘅付款回應", viewResp:"睇付款回應", draftNote:"示範範本，未經律師審閱。期限按《建造業付款保障條例》（第652章）及建造業議會資料計算，須由律師確認。",
  respForm:"回應 {f} 嘅申索 #{no}", admitted:"承認金額 (HK$)", reasons:"扣數理由（每項都要寫）", genResp:"產生付款回應並標記已回覆",
  reasonPh:"例如：第 3 層電線槽未完成，扣 HK$25,000",
  foot1:"示範用途：所有公司、工程同金額都係虛構。唔係法律意見。",
- foot2:"期限依據《建造業付款保障條例》（第652章，2025年8月28日生效）及建造業議會資料：回覆及付款期限按合約，但最長分別係 30 日同 60 日；開展審裁時限以 28 日估算。條文同計算方法須由律師確認。",
+ foot2:"期限依據《建造業付款保障條例》（第652章）第15、20、21、23、24條及建造業議會資料：30 日內回覆、60 日內付款、爭議出現後 28 日內開展審裁，全部以曆日計。如合約訂明較早付款日期，回覆限期會相應提早。實際計算須由律師確認。",
 },
 en:{
- brand:"Savetime", company:"Chan's Electrical Engineering Co Ltd (fictional)", demoPill:"Demo · made-up data",
+ brand:"SteadyClaim", company:"Chan's Electrical Engineering Co Ltd (fictional)", demoPill:"Demo · made-up data",
  demoDate:"Demo date", dateHint:"Tap “+7 days” or “+30 days” to see what happens when deadlines pass", today:"Today", p7:"+7 days", p30:"+30 days",
  t_overview:"Overview", t_out:"Claims sent", t_in:"Claims received", t_ret:"Retention", t_jobs:"Jobs",
- ov_h:"Needs action today", ov_sub:"Every claim's response and payment deadlines are tracked from its own contract terms (the Ordinance caps them at 30 and 60 days), along with every retention release date.",
+ ov_h:"Needs action today", ov_sub:"Every claim's 30- and 60-day deadlines and every retention release date are tracked automatically.",
  st_unpaid:"Claimed, not yet paid", st_ret:"Retention held by builders", st_retOver:"Retention overdue", st_dl:"Deadlines in next 14 days",
  nothing:"Nothing needs action right now.",
- out_h:"Payment claims you sent", out_sub:"Monthly claim → contract response period (30 days at most): they must respond → payment period (60 days at most): they must pay. You're alerted the moment a date passes.",
- in_h:"Claims you received (your own subs)", in_sub:"When your subs claim from you, you must respond in writing within your contract's period (30 days at most), with a reason for every deduction.",
+ out_h:"Payment claims you sent", out_sub:"Monthly claim → day 30: they must respond → day 60: they must pay. You're alerted the moment a date passes.",
+ in_h:"Claims you received (your own subs)", in_sub:"When your subs claim from you, you must respond in writing within 30 days, with a reason for every deduction.",
  ret_h:"Retention register (all jobs)", ret_sub:"Includes older jobs the Ordinance doesn't cover. Alerts on release dates and before time limits. You sign and send the letters yourself.",
  jobs_h:"Jobs", jobs_sub:"See at a glance which jobs the Security of Payment Ordinance covers.",
  newClaim:"New monthly claim", job:"Job", period:"Claim period", cum:"Contract work done to date (HK$)", vari:"Variations (HK$)", prev:"Less previous payments (HK$)",
- retLess:"Less retention", claimAmt:"Amount claimed this period", genServe:"Generate claim", formHint:"Enter three numbers. Retention and the claim amount are calculated for you, then a claim document meeting the Ordinance's requirements is produced.",
+ retLess:"Less retention", claimAmt:"Amount claimed this period", genServe:"Generate claim", formHint:"Enter your own three figures. Retention is calculated, the claim is laid out, and it's checked again before you send it.",
  viewDoc:"View claim", adjPack:"Prepare adjudication pack", replyBtn:"Draft payment response", letterBtn:"Draft demand letter", markPaid:"Mark received",
  clkResp:"respond", clkPay:"pay", claimNo:"Claim", served:"Served", respDue:"Response due", payDue:"Payment due", day:"Day {n}", daysLeft:"{n} days left", daysAgo:"{n} days ago",
- stPaid:"Paid", stLateResp:"Late response", stWaitResp:"Awaiting response", stNoResp:"No response", stWaitPay:"Awaiting payment", stPayLate:"Payment overdue", stCut:"Cut by {a}",
- inDue:"Your response due", inDone:"Responded", inRespLate:"Responded late", inLate:"Response deadline missed", from:"From",
+ stPaid:"Paid", stWaitResp:"Awaiting response", stNoResp:"No response", stWaitPay:"Awaiting payment", stPayLate:"Payment overdue", stCut:"Cut by {a}",
+ inDue:"Your response due", inDone:"Responded", inLate:"Response deadline missed", from:"From",
  retDue:"Due back", retLimit:"Time limit (est.)", retNotDue:"Not yet due", retOver:"{n} months overdue", retSoon:"Due soon", retPaid:"Recovered", retNear:"Time limit near",
  covered:"Covered by SOPO", notCovered:"Not covered", mainDate:"Main contract signed", sum:"Subcontract sum", builder:"Main contractor",
  chk_h:"Quick check: is a contract covered?", chk_q1:"Was the main contract signed on or after 28 Aug 2025?", chk_q2:"Is the main contract worth HK$5m or more? (Supply-only: HK$0.5m)",
- chk_q3:"Is it private-sector work on an existing residential building, or minor work on an existing non-residential building that doesn't need Buildings Department approval?", yes:"Yes", no:"No", unsure:"Not sure",
+ chk_q3:"(Private work) Is it work to an existing residential unit or common parts, or fit-out or repair in an existing building that doesn't need Buildings Department approval?", yes:"Yes", no:"No", unsure:"Not sure",
  chk_yes:"Probably covered: you can use statutory payment claims and adjudication.", chk_no:"Probably not covered: you can still track and chase retention.", chk_unsure:"Can't tell yet: ask a lawyer.", chk_wait:"Answer all three to see a result.",
  chk_note:"General information, not legal advice.",
- a_noResp:"{b} didn't respond to claim #{no} by the deadline", a_lateResp:"{b} responded to claim #{no} after the deadline", a_noRespD:"Claim of {amt}. They may no longer be able to raise set-off in adjudication. Adjudication must start by about {d} ({left}).",
+ a_noResp:"{b} didn't respond to claim #{no} within 30 days", a_noRespD:"Claim of {amt}. They can no longer raise set-off in adjudication. Adjudication must start by about {d} ({left}).",
  a_cut:"Claim #{no} cut by {amt}", a_cutD:"Their reason: {r}. To dispute it, adjudication must start by about {d} ({left}).",
- a_payLate:"{b} hasn't paid the admitted {amt}", a_payLateD:"Claim #{no}. You can start adjudication, or give 5 working days' written notice to suspend work.",
+ a_payLate:"{b} hasn't paid the admitted {amt}", a_payLateD:"Claim #{no}. Start adjudication by about {d} ({left}), or give at least 5 working days' written notice before suspending work.",
  a_paySoon:"{amt} should arrive by {d}", a_paySoonD:"{b} · claim #{no} ({left})",
  a_respSoon:"Response to claim #{no} due {d}", a_respSoonD:"{b} · {amt} ({left})",
- a_inLate:"You missed the deadline to respond to {f}'s claim #{no}", a_inRespLate:"Your response to {f}'s claim #{no} went out after the deadline", a_inLateD:"{amt}. You may have lost the right to raise set-off in adjudication. Speak to a lawyer now.",
- a_inSoon:"Respond to {f}'s claim #{no} within {n} days", a_inSoonD:"{amt}. Give a reason for every deduction, or you may lose your defences.",
+ a_inLate:"You missed the deadline to respond to {f}'s claim #{no}", a_inLateD:"{amt}. You may have lost the right to raise set-off in adjudication. Speak to a lawyer now.",
+ a_inSoon:"Respond to {f}'s claim #{no} within {n} days", a_inSoonD:"{amt}. Give a reason for every deduction, or in adjudication you may be treated as not responding and lose set-off.",
  a_limit:"{j}: {amt} retention, about {n} days left to claim", a_limitD:"Due back {d}, never paid. Contract claims are generally time-barred after 6 years (to be confirmed by a lawyer).",
  a_retMore:"{n} more retention amounts overdue, {amt} in total", a_retMoreD:"Mostly older jobs the Ordinance doesn't cover. Start with a demand letter.", goRet:"View retention",
  doc_claim:"Payment claim", doc_resp:"Payment response", doc_adj:"Adjudication pack (summary)", doc_letter:"Request for release of retention",
- close:"Close", t_wa:"WhatsApp / email", wa_h:"Works from WhatsApp or email", wa_sub:"Nothing new to learn: claims still come and go on WhatsApp or email. Forward them to Savetime and they're logged, the deadline is counted, and you're reminded before it's due.", em_s1:"① A claim email arrives in your inbox", em_s2:"② Tap Forward as usual and send it to your company's own Savetime address", em_s3:"③ Savetime logs it automatically and replies; the claim appears on the Savetime website", em_app:"Your email app (Gmail, Outlook, etc.)", em_sys:"Savetime auto-reply (arrives in your email app)", em_fwdBtn:"Forward", em_send:"Send", em_view:"View in system", em_date:"Date", em_orig:"---------- Forwarded message ----------", em_dateNote:"The deadline counts from when the email was originally received ({dt}), not from when you forwarded it.", em_tip:"Tip: set an auto-forward rule in Gmail or Outlook (e.g. for emails from your main contractors and subcontractors) and you won't even need to forward.", em_h:"Email works too", em_sub:"Each company gets its own forwarding address. When a claim arrives by email, forward it or CC a copy.", em_from:"From", em_to:"To", em_subj:"Subject", em_fwd:"Forward to Savetime", em_logged:"✅ Logged: Sun Shing Metalwork (fictional) claim #3, {amt}. Response due {d}.", em_reply:"Savetime auto-reply", em_body:"Attachment: SunShing_Claim_No3.pdf\nPlease find this month's payment claim attached, amount HK$58,000.", wa_bot:"Savetime assistant", wa_status:"Demo: forward from your own WhatsApp to this number", wa_hi:"Hi! I'm the Savetime assistant 👋\nWhen you receive or send a payment claim, just forward it to me. I'll log it, count the deadline and remind you before it's due.", wa_hint:"Tap “Next step” below to start the demo 👇", wa_next:"Next step", wa_reset:"Start again", wa_done:"End of demo. Tap “Start again” to replay.",
- wa_s1u:"(Forwarded) Chi Keung Cabling claim no. 4", wa_s1b:"✅ Logged: Chi Keung Cabling (fictional) claim #4, {amt}.\nYour payment response is due {d} ({n} days).\nI'll remind you before then.", wa_open:"Open claim",
- wa_s2skip:"⏩ 25 days later", wa_s2b:"⏰ Reminder: your response to Chi Keung's claim #4 is due {d}, {n} days left.\nGive a reason for every deduction, or you may lose your defences.", wa_reply:"Draft payment response",
- wa_s3u:"Just emailed this month's claim to Main Contractor B (attached)", wa_s3b:"✅ Logged: claim #{no}, {amt}, served {sd}.\nMain Contractor B must respond by {d} and pay by {p}.",
- wa_s4skip:"⏩ 31 days later", wa_s4b:"⚠️ Main Contractor B didn't respond to claim #{no} by the deadline.\nIt may no longer be able to raise set-off in adjudication. Start adjudication by about {d}.", wa_adj:"View adjudication pack",
- ov_today:"{n} things need action today", ov_more:"Show {n} more", ov_numbers:"Key numbers", evBtn:"Evidence ({n})", evTitle:"Evidence and attachments", evNone:"No attachments yet.", evAdd:"Add files (photos, PDF, Excel)", evNote:"Keep each claim's valuation, photos, site diaries, instructions and WhatsApp screenshots here, so the record is ready if it goes to adjudication.", evAdded:"Added {n} file(s)",
- logBtn:"+ Log a received claim", logTitle:"Log a received payment claim", logHint:"Log a claim the moment it arrives (email, WhatsApp or by hand) and the response clock starts.", howLbl:"How received", h_email:"Email", h_whatsapp:"WhatsApp", h_hand:"By hand", h_post:"Post", filesLbl:"Claim document and attachments", logSave:"Log and start the clock", logged:"Logged. Your response is due {d}", jobLbl:"Job",
+ close:"Close", t_wa:"WhatsApp / email", wa_h:"Works from WhatsApp or email", wa_sub:"Nothing new to learn: claims still come and go on WhatsApp or email. Forward them to SteadyClaim and they're logged, the deadline is counted, and you're reminded before it's due.", em_s1:"① A claim email arrives in your inbox", em_s2:"② Tap Forward as usual and send it to your company's own SteadyClaim address", em_s3:"③ SteadyClaim logs it automatically and replies; the claim appears on the SteadyClaim website", em_app:"Your email app (Gmail, Outlook, etc.)", em_sys:"SteadyClaim auto-reply (arrives in your email app)", em_fwdBtn:"Forward", em_send:"Send", em_view:"View in system", em_date:"Date", em_orig:"---------- Forwarded message ----------", em_dateNote:"The deadline counts from when the email was originally received ({dt}), not from when you forwarded it.", em_tip:"Tip: set an auto-forward rule in Gmail or Outlook (e.g. for emails from your main contractors and subcontractors) and you won't even need to forward.", em_h:"Email works too", em_sub:"Each company gets its own forwarding address. When a claim arrives by email, forward it or CC a copy.", em_from:"From", em_to:"To", em_subj:"Subject", em_fwd:"Forward to SteadyClaim", em_logged:"✅ Logged: Sun Shing Metalwork (fictional) claim #3, {amt}. Response due {d}.", em_reply:"SteadyClaim auto-reply", em_body:"Attachment: SunShing_Claim_No3.pdf\nPlease find this month's payment claim attached, amount HK$58,000.", wa_bot:"SteadyClaim assistant", wa_status:"Demo: forward from your own WhatsApp to this number", wa_hi:"Hi! I'm the SteadyClaim assistant 👋\nWhen you receive or send a payment claim, just forward it to me. I'll log it, count the deadline and remind you before it's due.", wa_hint:"Tap “Next step” below to start the demo 👇", wa_next:"Next step", wa_reset:"Start again", wa_done:"End of demo. Tap “Start again” to replay.",
+ wa_s1u:"(Forwarded) Chi Keung Cabling claim no. 4", wa_s1b:"✅ Logged: Chi Keung Cabling (fictional) claim #4, {amt}.\nYour payment response is due {d} (30 days).\n⚠️ This came by WhatsApp, which may not count as proper service, but the clock is counted anyway to be safe.\nI'll remind you before then.", wa_open:"Open claim",
+ wa_s2skip:"⏩ 25 days later", wa_s2b:"⏰ Reminder: your response to Chi Keung's claim #4 is due {d}, 5 days left.\nGive a reason for every deduction, or in adjudication you may be treated as not responding and lose set-off.", wa_reply:"Draft payment response",
+ wa_s3u:"Just emailed this month's claim to Main Contractor B (attached)", wa_s3b:"✅ Logged: claim #{no}, {amt}, served by email {sd} (proof of service saved).\nMain Contractor B must respond by {d} and pay by {p}.",
+ wa_s4skip:"⏩ 31 days later", wa_s4b:"⚠️ Main Contractor B didn't respond to claim #{no} within 30 days.\nIt can no longer raise set-off in adjudication. Start adjudication by about {d}.", wa_adj:"View adjudication pack",
+ ov_today:"{n} things need action today ({u} urgent)", ov_more:"Show {n} more", ov_numbers:"Key numbers", evBtn:"Evidence ({n})", evTitle:"Evidence and attachments", evNone:"No attachments yet.", evAdd:"Add files (photos, PDF, Excel)", evNote:"Keep each claim's valuation, photos, site diaries, instructions and WhatsApp screenshots here, so the record is ready if it goes to adjudication.", evAdded:"Added {n} file(s)",
+ logBtn:"+ Log a received claim", logTitle:"Log a received payment claim", logHint:"Log a claim the moment it arrives (email, WhatsApp or by hand) and the 30-day response clock starts.", howLbl:"How received", h_email:"Email", h_whatsapp:"WhatsApp", h_hand:"By hand", h_post:"Registered post", filesLbl:"Claim document and attachments", logSave:"Log and start the clock", logged:"Logged. Your response is due {d}", jobLbl:"Job",
+ svcLbl:"How you'll serve it", chk_h:"Check before sending", chk_bill:"Billing date: {d} (last day of the month if the contract doesn't say)", chk_one:"First claim for this period", chk_two:"Claim #{no} already covers this period: a second claim may be ignored", chk_calc:"Shows how the amount is calculated (work, variations, retention, paid)", chk_adj:"No amount under adjudication or already decided (declaration added)", chk_svcOk:"Service: {m}; date, time and recipient will be logged", chk_svcWa:"WhatsApp may not count as proper service unless the contract allows it. Send by email or registered post too",
+ svcRec:"Served: {m} · {d}", rc_btn:"Check response", rc_title:"Payment response check (s.19)", rc_id:"Identifies which claim it answers", rc_amt:"States the admitted amount", rc_diff:"States the difference from the claimed amount", rc_calc:"States how the admitted amount is calculated", rc_time:"Served on time (by {d})", rc_good:"The response meets the basic requirements.", rc_bad:"This response may not meet s.19: the payer is treated as disputing the whole claim and can't raise set-off in adjudication.", rc_flag:"Response problem",
+ waSvc:"⚠️ Received by WhatsApp: may not count as proper service. The 30-day clock is counted anyway, to be safe.", billDate:"Billing date", svcMethod:"Service method", declare:"This claim does not include any amount under adjudication or already decided.",
  vo_h:"Variations register", vo_sub:"Every variation with where the instruction came from and its status. Verbal or WhatsApp instructions are the most likely to be cut, so get written confirmation early.", vo_no:"No.", vo_desc:"Description", vo_by:"Instruction", vo_amt:"Amount", vo_st:"Status", st_agreed:"Agreed", st_pending:"Pending", st_disputed:"Disputed", vo_add:"Add a variation", vo_save:"Add", vo_date:"Instruction date", vo_tot:"Agreed {a} · Pending {b} · Disputed {c}",
- dedH:"Deductions (a reason for each)", dedReason:"Reason", dedAmt:"Amount (HK$)", dedEv:"Evidence", dedAdd:"+ Add a deduction", dedNone:"(no evidence)", admCalc:"Admitted: {a} (claimed {c} less deductions {d})", backEdit:"Back to edit", chop:"Apply chop", unchop:"Remove chop", chopNote:"Upload the company chop once in Settings, then stamp any document with one tap.", t_set:"Settings", set_h:"Settings", youAre:"Demo user: Mr Chan (owner)", chop_h:"Company chop and signature", chop_sub:"Stamp the chop on white paper with the boss's signature, photograph it and upload. The background is removed and the image cropped automatically.", chop_sample:"In use: sample chop (fictional)", chop_yours:"In use: your uploaded chop", chop_preview:"New chop preview (background removed)", chop_upload:"Upload chop photo", chop_use:"Use this chop", chop_cancel:"Cancel", chop_reset:"Restore sample chop", chop_delete:"Delete chop", chop_none:"No chop set. Documents can only be printed and chopped by hand.", chop_bad:"Couldn't read that photo. Try a clear shot on white paper", chop_saved:"Chop updated", terms:"Payment terms: respond in {r} days · pay in {p} days", auth_h:"Who can apply the chop", auth_note:"Only people the boss authorises. Remove anyone instantly, for example when staff leave.", confirmEach:"Confirm before every chop", confirmChop:"Tap again to confirm", log_h:"Chop log", log_none:"No chops yet. Open any document and tap “Apply chop”.", owner:"Owner", dlPdf:"Download PDF", dlWord:"Download Word", preparing:"Preparing…", saved:"Downloaded", dlFail:"Download failed, please try again", dlNA:"Downloads aren't available in this view.", dlHint:"In real use: download, sign or chop, then send by email or WhatsApp.", recvDetails:"Claim received (fix anything wrong first)", fromLbl:"Subcontractor", claimNoLbl:"Claim no.", servedLbl:"Date received", amtLbl:"Amount claimed (HK$)", yourResp:"Your payment response", viewResp:"View payment response", draftNote:"Demo template, not reviewed by a lawyer. Deadlines follow the Security of Payment Ordinance (Cap. 652) and CIC guidance; sections and counting rules to be confirmed by a lawyer.",
+ dedH:"Deductions (a reason for each)", dedReason:"Reason", dedAmt:"Amount (HK$)", dedEv:"Evidence", dedAdd:"+ Add a deduction", dedNone:"(no evidence)", admCalc:"Admitted: {a} (claimed {c} less deductions {d})", backEdit:"Back to edit", chop:"Apply chop", unchop:"Remove chop", chopNote:"Upload the company chop once in Settings, then stamp any document with one tap.", t_set:"Settings", set_h:"Settings", youAre:"Demo user: Mr Chan (owner)", chop_h:"Company chop and signature", chop_sub:"Stamp the chop on white paper with the boss's signature, photograph it and upload. The background is removed and the image cropped automatically.", chop_sample:"In use: sample chop (fictional)", chop_yours:"In use: your uploaded chop", chop_preview:"New chop preview (background removed)", chop_upload:"Upload chop photo", chop_use:"Use this chop", chop_cancel:"Cancel", chop_reset:"Restore sample chop", chop_delete:"Delete chop", chop_none:"No chop set. Documents can only be printed and chopped by hand.", chop_bad:"Couldn't read that photo. Try a clear shot on white paper", chop_saved:"Chop updated", auth_h:"Who can apply the chop", auth_note:"Only people the boss authorises. Remove anyone instantly, for example when staff leave.", confirmEach:"Confirm before every chop", confirmChop:"Tap again to confirm", log_h:"Chop log", log_none:"No chops yet. Open any document and tap “Apply chop”.", owner:"Owner", dlPdf:"Download PDF", dlWord:"Download Word", preparing:"Preparing…", saved:"Downloaded", dlFail:"Download failed, please try again", dlNA:"Downloads aren't available in this view.", dlHint:"In real use: download, sign or chop, then send by email or WhatsApp.", recvDetails:"Claim received (fix anything wrong first)", fromLbl:"Subcontractor", claimNoLbl:"Claim no.", servedLbl:"Date received", amtLbl:"Amount claimed (HK$)", yourResp:"Your payment response", viewResp:"View payment response", draftNote:"Demo template, not reviewed by a lawyer. Deadlines follow the Security of Payment Ordinance (Cap. 652) and CIC guidance; to be confirmed by a lawyer.",
  respForm:"Respond to {f}'s claim #{no}", admitted:"Amount admitted (HK$)", reasons:"Reasons for deductions (one for each)", genResp:"Generate response and mark as responded",
  reasonPh:"e.g. 3/F cable trays not complete, HK$25,000 deducted",
  foot1:"Demo only: all companies, jobs and amounts are made up. Not legal advice.",
- foot2:"Deadlines follow the Construction Industry Security of Payment Ordinance (Cap. 652, in force 28 Aug 2025) and CIC guidance: response and payment periods come from each contract, capped at 30 and 60 days; the 28-day adjudication window is an estimate. Exact sections and counting rules must be confirmed by a lawyer.",
+ foot2:"Deadlines follow the Construction Industry Security of Payment Ordinance (Cap. 652, ss.15, 20, 21, 23, 24) and CIC guidance: 30 days to respond, 60 days to pay, 28 days after a dispute arises to start adjudication, all in calendar days. If the contract sets an earlier payment date, the response deadline moves earlier. Exact counting must be confirmed by a lawyer.",
 }};
 const t = (k, v={}) => (T[S.lang][k] ?? k).replace(/\{(\w+)\}/g, (_,x) => v[x] ?? "");
 const L = o => (o && typeof o === "object") ? (o[S.lang] ?? o.zh) : o;
@@ -361,9 +382,9 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 /* ---------- made-up data ---------- */
 const COMPANY = { zh:"陳氏電器工程有限公司", en:"Chan's Electrical Engineering Co Ltd" };
 const jobs = [
- { id:"J1", name:{zh:"啟德 X 地盤公營房屋",en:"Kai Tak Site X public housing"}, builder:{zh:"總承建商 A",en:"Main Contractor A"}, mainDate:"2025-11-03", covered:true, sum:12800000, retPct:10, capPct:5,
+ { id:"J1", name:{zh:"啟德 X 地盤公營房屋",en:"Kai Tak Site X public housing"}, builder:{zh:"總承建商 A",en:"Main Contractor A"}, mainDate:"2025-11-03", ref:"CE/SC/2025/018", covered:true, sum:12800000, retPct:10, capPct:5,
    why:{zh:"總合約 2025年8月28日後簽，金額超過 HK$500 萬",en:"Main contract signed after 28 Aug 2025, over HK$5m"} },
- { id:"J2", name:{zh:"將軍澳 Y 學校新翼",en:"Tseung Kwan O School Y new wing"}, builder:{zh:"總承建商 B",en:"Main Contractor B"}, mainDate:"2026-02-16", covered:true, sum:4200000, retPct:10, capPct:5, respDays:21, payDays:45,
+ { id:"J2", name:{zh:"將軍澳 Y 學校新翼",en:"Tseung Kwan O School Y new wing"}, builder:{zh:"總承建商 B",en:"Main Contractor B"}, mainDate:"2026-02-16", ref:"CE/SC/2026/004", covered:true, sum:4200000, retPct:10, capPct:5,
    why:{zh:"總合約 2025年8月28日後簽，金額超過 HK$500 萬",en:"Main contract signed after 28 Aug 2025, over HK$5m"} },
  { id:"J3", name:{zh:"觀塘商業大廈翻新",en:"Kwun Tong office refurbishment"}, builder:{zh:"總承建商 C",en:"Main Contractor C"}, mainDate:"2024-06-10", covered:false, sum:2100000,
    why:{zh:"總合約喺 2025年8月28日前簽",en:"Main contract signed before 28 Aug 2025"} },
@@ -375,11 +396,6 @@ const jobs = [
    why:{zh:"總合約喺 2025年8月28日前簽",en:"Main contract signed before 28 Aug 2025"} },
 ];
 const J = id => jobs.find(j => j.id===id);
-/* Contract periods: the Ordinance caps the response period at 30 days and payment at 60 days,
-   but a contract can set shorter ones. Each job carries its own terms; missing terms fall back to the caps. */
-const RESP_MAX = 30, PAY_MAX = 60;
-const rd = id => Math.min(J(id).respDays || RESP_MAX, RESP_MAX);
-const pd = id => Math.min(J(id).payDays || PAY_MAX, PAY_MAX);
 
 const EV = (name, kind) => ({ name, kind, url:null });
 const claimsOut = [
@@ -388,10 +404,10 @@ const claimsOut = [
  { job:"J2", no:6,  period:"2026-08", served:"2026-09-08", cum:1650000, vari:120000, prev:1173000, resp:null, paid:null,
    ev:[EV("估值表_第6期.xlsx","sheet"), EV("送達證明_電郵_2026-09-08.pdf","pdf"), EV("地盤日誌_2026年8月.pdf","pdf")] },
  { job:"J1", no:10, period:"2026-08", served:"2026-08-31", cum:8200000, vari:300000, prev:7000000,
-   resp:{ date:"2026-09-25", admitted:640000, reason:{zh:"更改工程 #4 未獲確認",en:"Variation #4 not yet agreed"} }, paid:null,
+   resp:{ date:"2026-09-25", admitted:640000, reason:{zh:"更改工程 #4 未獲確認",en:"Variation #4 not yet agreed"}, calcShown:false }, paid:null,
    ev:[EV("估值表_第10期.xlsx","sheet"), EV("更改工程指示_VO4_WhatsApp.png","img"), EV("總承建商付款回應_2026-09-25.pdf","pdf")] },
  { job:"J1", no:9,  period:"2026-07", served:"2026-07-31", cum:7500000, vari:280000, prev:6360000,
-   resp:{ date:"2026-08-27", admitted:780000 }, paid:"2026-09-24", ev:[EV("估值表_第9期.xlsx","sheet")] },
+   resp:{ date:"2026-08-27", admitted:780000, calcShown:true }, paid:"2026-09-24", ev:[EV("估值表_第9期.xlsx","sheet")] },
 ];
 const variations = [
  { job:"J1", no:3, desc:{zh:"加裝走廊緊急照明",en:"Extra corridor emergency lighting"}, date:"2026-06-12", by:{zh:"地盤總管書面指示",en:"Site agent's written instruction"}, amt:80000, st:"agreed" },
@@ -406,11 +422,11 @@ function calc(c){
 }
 
 const claimsIn = [
- { from:{zh:"志強電線工程（虛構）",en:"Chi Keung Cabling (fictional)"}, job:"J1", no:3, served:"2026-09-20", amt:185000, resp:null, how:"email",
+ { from:{zh:"志強電線工程（虛構）",en:"Chi Keung Cabling (fictional)"}, ref:"CE/SS/2025/031", works:{zh:"電線敷設",en:"Cable installation"}, job:"J1", no:3, served:"2026-09-20", amt:185000, resp:null, how:"email",
    ev:[EV("志強_申索第3號.pdf","pdf"), EV("3樓電線槽現況相片.jpg","img"), EV("地盤日誌_2026年9月.pdf","pdf")] },
- { from:{zh:"新成鐵器（虛構）",en:"Sun Shing Metalwork (fictional)"}, job:"J2", no:2, served:"2026-10-02", amt:64000, resp:null, how:"whatsapp",
+ { from:{zh:"新成鐵器（虛構）",en:"Sun Shing Metalwork (fictional)"}, ref:"CE/SS/2026/007", works:{zh:"鐵器工程",en:"Metalwork"}, job:"J2", no:2, served:"2026-10-02", amt:64000, resp:null, how:"whatsapp",
    ev:[EV("新成_申索第2號.jpg","img")] },
- { from:{zh:"志強電線工程（虛構）",en:"Chi Keung Cabling (fictional)"}, job:"J1", no:2, served:"2026-08-20", amt:150000, resp:{ date:"2026-09-10", admitted:150000, reason:"", deds:[] }, how:"email",
+ { from:{zh:"志強電線工程（虛構）",en:"Chi Keung Cabling (fictional)"}, ref:"CE/SS/2025/031", works:{zh:"電線敷設",en:"Cable installation"}, job:"J1", no:2, served:"2026-08-20", amt:150000, resp:{ date:"2026-09-10", admitted:150000, reason:"", deds:[] }, how:"email",
    ev:[EV("志強_申索第2號.pdf","pdf")] },
 ];
 
@@ -425,22 +441,19 @@ const retention = [
 
 /* ---------- status logic ---------- */
 function outStatus(c){
-  const now = today(), respDue = add(c.served,rd(c.job)), payDue = add(c.served,pd(c.job));
+  const now = today(), respDue = add(c.served,30), payDue = add(c.served,60);
   const a = calc(c).amt, sinceServe = diff(c.served, now);
   if (c.paid && diff(c.paid, now) >= 0) return { key:"paid", cls:"s-green", label:t("stPaid"), respDue, payDue, sinceServe, a };
-  // A response that arrives after the response deadline is treated like no response.
-  const lateResp = c.resp && diff(c.resp.date, now) >= 0 && diff(respDue, c.resp.date) > 0;
-  if (!c.resp || diff(c.resp.date, now) < 0 || lateResp){
-    if (diff(respDue, now) > 0) return { key:"noresp", cls:"s-red", label:t(lateResp ? "stLateResp" : "stNoResp"), respDue, payDue, sinceServe, a, lateResp, adjBy:add(respDue,28) };
+  if (!c.resp || diff(c.resp.date, now) < 0){
+    if (diff(respDue, now) > 0) return { key:"noresp", cls:"s-red", label:t("stNoResp"), respDue, payDue, sinceServe, a, adjBy:add(respDue,28) };
     return { key:"waitresp", cls:"s-blue", label:t("stWaitResp"), respDue, payDue, sinceServe, a };
   }
   const cut = a - c.resp.admitted;
-  if (diff(payDue, now) > 0) return { key:"paylate", cls:"s-red", label:t("stPayLate"), respDue, payDue, sinceServe, a, cut };
-  return { key:"waitpay", cls: cut>0 ? "s-amber":"s-blue", label: cut>0 ? t("stCut",{a:money(cut)}) : t("stWaitPay"), respDue, payDue, sinceServe, a, cut, adjBy: cut>0 ? add(c.resp.date,28) : null };
+  if (diff(payDue, now) > 0) return { key:"paylate", cls:"s-red", label:t("stPayLate"), respDue, payDue, sinceServe, a, cut, adjBy:add(payDue,28) };
+  return { key:"waitpay", cls: cut>0 ? "s-amber":"s-blue", label: cut>0 ? t("stCut",{a:money(cut)}) : t("stWaitPay"), respDue, payDue, sinceServe, a, cut, adjBy: cut>0 ? add(respDue,28) : null };
 }
 function inStatus(c){
-  const now = today(), due = add(c.served,rd(c.job));
-  if (c.resp && diff(due, c.resp.date) > 0) return { key:"lateDone", cls:"s-red", label:t("inRespLate"), due };
+  const now = today(), due = add(c.served,30);
   if (c.resp) return { key:"done", cls:"s-green", label:t("inDone"), due };
   const n = diff(now, due);
   if (n < 0) return { key:"late", cls:"s-red", label:t("inLate"), due, n };
@@ -460,7 +473,7 @@ function buildAlerts(){
   claimsOut.forEach((c,i) => {
     const s = outStatus(c), j = J(c.job), b = L(j.builder);
     if (s.key==="noresp" && diff(now, s.adjBy) >= -60)
-      A.push({ sev:0, d:diff(now,s.adjBy), t:t(s.lateResp ? "a_lateResp" : "a_noResp",{b,no:c.no}), dd:t("a_noRespD",{amt:money(s.a), d:fmt(s.adjBy), left:left(diff(now,s.adjBy))}), act:{lab:t("adjPack"), fn:()=>docAdj(i)} });
+      A.push({ sev:0, d:diff(now,s.adjBy), t:t("a_noResp",{b,no:c.no}), dd:t("a_noRespD",{amt:money(s.a), d:fmt(s.adjBy), left:left(diff(now,s.adjBy))}), act:{lab:t("adjPack"), fn:()=>docAdj(i)} });
     if (s.key==="waitresp" && diff(now,s.respDue) <= 7)
       A.push({ sev:2, d:diff(now,s.respDue), t:t("a_respSoon",{no:c.no, d:fmt(s.respDue)}), dd:t("a_respSoonD",{b, amt:money(s.a), left:left(diff(now,s.respDue))}), act:{lab:t("viewDoc"), fn:()=>docClaim(i)} });
     if (s.key==="waitpay" && s.cut>0 && diff(now,s.adjBy) >= 0)
@@ -468,12 +481,11 @@ function buildAlerts(){
     if (s.key==="waitpay" && diff(now,s.payDue) <= 21)
       A.push({ sev:2, d:diff(now,s.payDue), t:t("a_paySoon",{amt:money(c.resp.admitted), d:fmt(s.payDue)}), dd:t("a_paySoonD",{b,no:c.no,left:left(diff(now,s.payDue))}), act:null });
     if (s.key==="paylate")
-      A.push({ sev:0, d:-diff(s.payDue,now), t:t("a_payLate",{b, amt:money(c.resp.admitted)}), dd:t("a_payLateD",{no:c.no}), act:{lab:t("adjPack"), fn:()=>docAdj(i)} });
+      A.push({ sev:0, d:-diff(s.payDue,now), t:t("a_payLate",{b, amt:money(c.resp.admitted)}), dd:t("a_payLateD",{no:c.no, d:fmt(s.adjBy), left:left(diff(now,s.adjBy))}), act:{lab:t("adjPack"), fn:()=>docAdj(i)} });
   });
   claimsIn.forEach((c,i) => {
     const s = inStatus(c), f = L(c.from);
-    if (s.key==="lateDone") A.push({ sev:1, d:0, t:t("a_inRespLate",{f,no:c.no}), dd:t("a_inLateD",{amt:money(c.amt)}), act:{lab:t("viewResp"), fn:()=>docResp(i)} });
-    else if (s.key==="late") A.push({ sev:0, d:s.n, t:t("a_inLate",{f,no:c.no}), dd:t("a_inLateD",{amt:money(c.amt)}), act:{lab:t("replyBtn"), fn:()=>respForm(i)} });
+    if (s.key==="late") A.push({ sev:0, d:s.n, t:t("a_inLate",{f,no:c.no}), dd:t("a_inLateD",{amt:money(c.amt)}), act:{lab:t("replyBtn"), fn:()=>respForm(i)} });
     else if (s.key==="open" && s.n<=10) A.push({ sev:1, d:s.n, t:t("a_inSoon",{f,no:c.no,n:s.n}), dd:t("a_inSoonD",{amt:money(c.amt)}), act:{lab:t("replyBtn"), fn:()=>respForm(i)} });
   });
   const others = [];
@@ -508,21 +520,20 @@ function renderHeader(){
     b.onclick = () => go(k); nav.appendChild(b);
   });
   document.getElementById("foot").innerHTML = `${esc(t("foot1"))}<br>${esc(t("foot2"))}`;
-  document.title = S.lang==="zh" ? "穩陣收 Savetime" : "Savetime";
+  document.title = S.lang==="zh" ? "穩陣收 SteadyClaim" : "SteadyClaim";
 }
 
 function clockHTML(c, s){
-  const R = rd(c.job), P = pd(c.job);
-  const pct = x => Math.max(0, Math.min(100, x/P*100));
-  const now = Math.max(0, Math.min(P, s.sinceServe));
+  const pct = x => Math.max(0, Math.min(100, x/60*100));
+  const now = Math.max(0, Math.min(60, s.sinceServe));
   const late = s.key==="noresp" || s.key==="paylate";
   return `<div class="clockwrap"><div class="clock ${late?"late":""}" aria-hidden="true">
     <div class="track"></div><div class="fill" style="width:${pct(now)}%"></div>
-    <div class="tick" style="left:0"></div><div class="tick" style="left:${pct(R)}%"></div><div class="tick" style="left:calc(100% - 2px)"></div>
+    <div class="tick" style="left:0"></div><div class="tick" style="left:50%"></div><div class="tick" style="left:calc(100% - 2px)"></div>
     ${s.key!=="paid" ? `<div class="now" style="left:${pct(now)}%"></div>` : ""}
     <div class="lab l" style="left:0">${esc(t("day",{n:0}))}</div>
-    <div class="lab" style="left:${pct(R)}%">${esc(t("day",{n:R}))} · ${esc(t("clkResp"))}</div>
-    <div class="lab r" style="left:100%">${esc(t("day",{n:P}))} · ${esc(t("clkPay"))}</div>
+    <div class="lab" style="left:50%">${esc(t("day",{n:30}))} · ${esc(t("clkResp"))}</div>
+    <div class="lab r" style="left:100%">${esc(t("day",{n:60}))} · ${esc(t("clkPay"))}</div>
   </div></div>`;
 }
 
@@ -536,17 +547,17 @@ function viewOverview(){
   claimsIn.forEach(c => { const s=inStatus(c); if (s.key==="open" && s.n<=14) dl++; });
   const top = alerts.slice(0,3), rest = alerts.slice(3);
   main.innerHTML = `
+    <div class="todaycard">
+      <h2>${esc(alerts.length ? t("ov_today",{n:alerts.length, u:alerts.filter(x=>x.sev===0).length}) : t("nothing"))}</h2>
+      <div class="section" id="alertsTop" style="margin:0"></div>
+      ${rest.length ? `<details class="more"><summary>${esc(t("ov_more",{n:rest.length}))}</summary><div class="section" id="alertsRest" style="margin:0"></div></details>` : ""}
+    </div>
     <h2 style="margin-bottom:10px">${esc(t("ov_numbers"))}</h2>
     <div class="stats">
       <div class="stat"><div class="k">${esc(t("st_unpaid"))}</div><div class="v">${money(unpaid)}</div></div>
       <div class="stat"><div class="k">${esc(t("st_ret"))}</div><div class="v">${money(retHeld)}</div></div>
       <div class="stat warn"><div class="k">${esc(t("st_retOver"))}</div><div class="v">${money(retOver)}</div></div>
       <div class="stat"><div class="k">${esc(t("st_dl"))}</div><div class="v">${dl}</div></div>
-    </div>
-    <div class="todaycard">
-      <h2>${esc(alerts.length ? t("ov_today",{n:alerts.length}) : t("nothing"))}</h2>
-      <div class="section" id="alertsTop" style="margin:0"></div>
-      ${rest.length ? `<details class="more"><summary>${esc(t("ov_more",{n:rest.length}))}</summary><div class="section" id="alertsRest" style="margin:0"></div></details>` : ""}
     </div>
     <p class="meta">${esc(t("ov_sub"))}</p>`;
   const draw = (list, box) => list.forEach(a => {
@@ -573,7 +584,7 @@ function emailBlock(){
       <div class="mb">${esc(t("em_body"))}</div>
       <div class="mf"><button type="button" class="btn" id="emGo">${esc(t("em_fwdBtn"))}</button><button type="button" class="btn ghost" id="emReset">${esc(t("wa_reset"))}</button></div></div>`;
   else if (st === 1) card = `<div class="mail"><div class="apb">✉️ ${esc(t("em_app"))}</div>
-      <div class="mh2"><span>${esc(t("em_to"))}</span><span><b>chan@savetime.example</b></span>
+      <div class="mh2"><span>${esc(t("em_to"))}</span><span><b>chan@steadyclaim.example</b></span>
         <span>${esc(t("em_subj"))}</span><span>Fwd: 付款申索第3號 – 將軍澳 Y 學校新翼</span></div>
       <div class="mb"><span class="meta">${esc(t("em_orig"))}
 ${esc(t("em_from"))}: accounts@sunshing.example
@@ -581,9 +592,9 @@ ${esc(t("em_date"))}: ${esc(dt)}</span>
 ${esc(t("em_body"))}</div>
       <div class="mf"><button type="button" class="btn" id="emGo">${esc(t("em_send"))}</button><button type="button" class="btn ghost" id="emReset">${esc(t("wa_reset"))}</button></div></div>`;
   else card = `<div class="mail"><div class="apb">✉️ ${esc(t("em_sys"))}</div>
-      <div class="mh2"><span>${esc(t("em_from"))}</span><span>${esc(t("em_reply"))} &lt;chan@savetime.example&gt;</span>
+      <div class="mh2"><span>${esc(t("em_from"))}</span><span>${esc(t("em_reply"))} &lt;chan@steadyclaim.example&gt;</span>
         <span>${esc(t("em_subj"))}</span><span>Re: Fwd: 付款申索第3號</span></div>
-      <div class="ok">${esc(t("em_logged",{amt:money(58000), d:fmt(add(today(),rd("J2")))}))}</div>
+      <div class="ok">${esc(t("em_logged",{amt:money(58000), d:fmt(add(today(),30))}))}</div>
       <div class="mb meta">${esc(t("em_dateNote",{dt}))}</div>
       <div class="mf"><button type="button" class="btn" id="emGo">${esc(t("em_view"))}</button><button type="button" class="btn ghost" id="emReset">${esc(t("wa_reset"))}</button></div></div>`;
   return `<div style="max-width:560px;margin:0 auto 12px;display:grid;gap:2px">${steps}</div>${card}
@@ -632,8 +643,7 @@ function drawChat(){
   const box = document.getElementById("chat"); if (!box) return;
   box.innerHTML = "";
   const hi = document.createElement("div"); hi.className = "bub in";
-  WA.t0 = WA.t0 || waTime();
-  hi.innerHTML = esc(t("wa_hi")) + `<span class="tm">${WA.t0}</span>`; box.appendChild(hi);
+  hi.innerHTML = esc(t("wa_hi")) + `<span class="tm">09:00</span>`; box.appendChild(hi);
   if (!WA.msgs.length){ const h = document.createElement("div"); h.className = "skip"; h.textContent = t("wa_hint"); box.appendChild(h); }
   WA.msgs.forEach(m => {
     if (m.skip){ const d = document.createElement("div"); d.className = "skip"; d.textContent = m.text(); box.appendChild(d); return; }
@@ -649,24 +659,24 @@ function waPush(m, delay){ setTimeout(() => { WA.msgs.push(m); drawChat(); }, de
 function waStep(){
   const tm = waTime();
   if (WA.step === 0){
-    const c = { from:{zh:"志強電線工程（虛構）",en:"Chi Keung Cabling (fictional)"}, job:"J1", no:4, served:today(), amt:92000, resp:null, how:"whatsapp", ev:[EV("志強_申索第4號.jpg","img")] };
+    const c = { from:{zh:"志強電線工程（虛構）",en:"Chi Keung Cabling (fictional)"}, ref:"CE/SS/2025/031", works:{zh:"電線敷設",en:"Cable installation"}, job:"J1", no:4, served:today(), amt:92000, resp:null, how:"whatsapp", ev:[EV("志強_申索第4號.jpg","img")] };
     claimsIn.unshift(c); WA.inRef = c;
     waPush({ side:"out", tm, att:{kind:"img", name:"志強_申索第4號.jpg"}, text:() => t("wa_s1u") });
-    waPush({ side:"in", tm, text:() => t("wa_s1b",{amt:money(c.amt), d:fmt(add(c.served,rd(c.job))), n:rd(c.job)}), btn:{ lab:() => t("wa_open"), fn:() => go("in") } }, 700);
+    waPush({ side:"in", tm, text:() => t("wa_s1b",{amt:money(c.amt), d:fmt(add(c.served,30))}), btn:{ lab:() => t("wa_open"), fn:() => go("in") } }, 700);
   } else if (WA.step === 1){
     const c = WA.inRef;
     waPush({ skip:true, text:() => t("wa_s2skip") });
-    waPush({ side:"in", tm, text:() => t("wa_s2b",{d:fmt(add(c.served,rd(c.job))), n:rd(c.job)-25}), btn:{ lab:() => t("wa_reply"), fn:() => { const k = claimsIn.indexOf(c); if (k>=0) respForm(k); } } }, 600);
+    waPush({ side:"in", tm, text:() => t("wa_s2b",{d:fmt(add(c.served,30))}), btn:{ lab:() => t("wa_reply"), fn:() => { const k = claimsIn.indexOf(c); if (k>=0) respForm(k); } } }, 600);
   } else if (WA.step === 2){
     const no = Math.max(0, ...claimsOut.filter(x=>x.job==="J2").map(x=>x.no)) + 1;
-    const c = { job:"J2", no, period:today().slice(0,7), served:today(), cum:1980000, vari:120000, prev:1593000, resp:null, paid:null, ev:[EV(`申索第${no}期.pdf`,"pdf")] };
+    const c = { job:"J2", no, period:today().slice(0,7), served:today(), svc:"email", cum:1980000, vari:120000, prev:1593000, resp:null, paid:null, ev:[EV(`申索第${no}期.pdf`,"pdf")] };
     claimsOut.unshift(c); WA.outRef = c;
     waPush({ side:"out", tm, att:{kind:"pdf", name:`申索第${no}期.pdf`}, text:() => t("wa_s3u") });
-    waPush({ side:"in", tm, text:() => t("wa_s3b",{no, amt:money(calc(c).amt), sd:fmt(c.served), d:fmt(add(c.served,rd(c.job))), p:fmt(add(c.served,pd(c.job)))}) }, 700);
+    waPush({ side:"in", tm, text:() => t("wa_s3b",{no, amt:money(calc(c).amt), sd:fmt(c.served), d:fmt(add(c.served,30)), p:fmt(add(c.served,60))}) }, 700);
   } else if (WA.step === 3){
     const c = WA.outRef;
     waPush({ skip:true, text:() => t("wa_s4skip") });
-    waPush({ side:"in", tm, text:() => t("wa_s4b",{no:c.no, d:fmt(add(c.served,rd(c.job)+28))}), btn:{ lab:() => t("wa_adj"), fn:() => { const k = claimsOut.indexOf(c); if (k>=0) docAdj(k); } } }, 600);
+    waPush({ side:"in", tm, text:() => t("wa_s4b",{no:c.no, d:fmt(add(c.served,58))}), btn:{ lab:() => t("wa_adj"), fn:() => { const k = claimsOut.indexOf(c); if (k>=0) docAdj(k); } } }, 600);
   }
   WA.step++;
   const nb = document.getElementById("waNext");
@@ -685,21 +695,32 @@ function viewOut(){
       <label class="f">${esc(t("cum"))}<input id="nf-cum" type="number" inputmode="numeric" min="0" step="1000" value="1980000"></label>
       <label class="f">${esc(t("vari"))}<input id="nf-var" type="number" inputmode="numeric" min="0" step="1000" value="120000"></label>
       <label class="f">${esc(t("prev"))}<input id="nf-prev" type="number" inputmode="numeric" min="0" step="1000" value="1593000"></label>
+      <label class="f">${esc(t("svcLbl"))}<select id="nf-svc">${["email","post","hand","whatsapp"].map(h=>`<option value="${h}">${esc(t("h_"+h))}</option>`).join("")}</select></label>
     </div>
     <div class="calc" id="nf-calc"></div>
+    <div class="chkbox"><h3>${esc(t("chk_h"))}</h3><ul class="chk" id="nf-check"></ul></div>
     <div class="btns"><button class="btn" type="submit">${esc(t("genServe"))}</button></div>
   </form>
   <div class="section" id="outList" style="margin-top:20px"></div>
   <div class="section" id="voSec"></div>`;
   const f = id => document.getElementById(id);
   const draft = () => ({ job:f("nf-job").value, no: Math.max(0,...claimsOut.filter(c=>c.job===f("nf-job").value).map(c=>c.no))+1,
-    period:f("nf-period").value || today().slice(0,7), served:today(), cum:+f("nf-cum").value||0, vari:+f("nf-var").value||0, prev:+f("nf-prev").value||0, resp:null, paid:null });
+    period:f("nf-period").value || today().slice(0,7), served:today(), svc:f("nf-svc").value, cum:+f("nf-cum").value||0, vari:+f("nf-var").value||0, prev:+f("nf-prev").value||0, resp:null, paid:null });
   const upd = () => { const d = draft(), r = calc(d), j = J(d.job);
     f("nf-calc").innerHTML = `<span>${esc(t("cum").replace(" (HK$)",""))} + ${esc(t("vari").replace(" (HK$)",""))}</span><span class="num">${money(r.gross)}</span>
-      <span>${esc(t("retLess"))} (${j.retPct}%, ${S.lang==="zh"?"上限":"cap"} ${j.capPct}%)</span><span class="num">(${money(r.ret)})</span>
+      <span>${esc(t("retLess"))} ${S.lang==="zh" ? `（${j.retPct}%，上限為合約金額 ${j.capPct}%）` : `(${j.retPct}%, capped at ${j.capPct}% of contract sum)`}</span><span class="num">(${money(r.ret)})</span>
       <span>${esc(t("prev").replace(" (HK$)",""))}</span><span class="num">(${money(d.prev)})</span>
-      <span class="tot">${esc(t("claimAmt"))} · ${esc(t("claimNo"))} #${d.no}</span><span class="num tot">${money(r.amt)}</span>`; };
-  ["nf-job","nf-cum","nf-var","nf-prev","nf-period"].forEach(id => f(id).addEventListener("input", upd)); upd();
+      <span class="tot">${esc(t("claimAmt"))} · ${esc(t("claimNo"))} #${d.no}</span><span class="num tot">${money(r.amt)}</span>`;
+    const dup = claimsOut.find(c => c.job===d.job && c.period===d.period);
+    const items = [
+      [true, t("chk_bill",{d:fmt(lastDay(d.period))})],
+      dup ? [false, t("chk_two",{no:dup.no})] : [true, t("chk_one")],
+      [true, t("chk_calc")],
+      [true, t("chk_adj")],
+      d.svc==="whatsapp" ? [false, t("chk_svcWa")] : [true, t("chk_svcOk",{m:t("h_"+d.svc)})],
+    ];
+    f("nf-check").innerHTML = items.map(([ok,txt]) => `<li><span class="${ok?"ok":"bad"}" aria-hidden="true">${ok?"✓":"!"}</span><span>${esc(txt)}</span></li>`).join(""); };
+  ["nf-job","nf-cum","nf-var","nf-prev","nf-period","nf-svc"].forEach(id => f(id).addEventListener("input", upd)); upd();
   f("newForm").addEventListener("submit", e => { e.preventDefault(); const d = draft(); if (calc(d).amt <= 0) return; claimsOut.unshift(d); render(); docClaim(0); });
 
   const list = document.getElementById("outList");
@@ -708,14 +729,16 @@ function viewOut(){
     const el = document.createElement("div"); el.className = "card";
     el.innerHTML = `<div class="row"><div><h2>${esc(t("claimNo"))} #${c.no} · ${esc(L(j.name))}</h2>
         <div class="meta">${esc(L(j.builder))} · ${esc(fmtPeriod(c.period))}</div></div>
-        <div style="text-align:right"><div class="amt">${money(s.a)}</div><span class="status ${s.cls}">${esc(s.label)}</span></div></div>
+        <div class="amtbox"><div class="amt">${money(s.a)}</div><span class="status ${s.cls}">${esc(s.label)}</span></div></div>
       ${clockHTML(c,s)}
       <div class="meta">${esc(t("respDue"))}: ${esc(fmt(s.respDue))} · ${esc(t("payDue"))}: ${esc(fmt(s.payDue))}${c.resp && diff(c.resp.date,today())>=0 ? ` · ${S.lang==="zh"?"已回覆，承認":"Responded, admitted"} ${money(c.resp.admitted)}${L(c.resp.reason)?` (${esc(L(c.resp.reason))})`:""}` : ""}</div>
+      <div class="meta">${esc(t("svcRec",{m:t("h_"+(c.svc||"email")), d:fmt(c.served)}))}${c.resp && diff(c.resp.date,today())>=0 && !respOK(c) ? ` · <span class="status s-amber">${esc(t("rc_flag"))}</span>` : ""}</div>
       <div class="btns"></div>`;
     const bs = el.querySelector(".btns");
     const b1 = document.createElement("button"); b1.type="button"; b1.className="btn ghost small"; b1.textContent=t("viewDoc"); b1.onclick=()=>docClaim(i); bs.appendChild(b1);
     if (!c.ev) c.ev = [];
     const be = document.createElement("button"); be.type="button"; be.className="btn ghost small"; be.textContent=t("evBtn",{n:c.ev.length}); be.onclick=()=>evModal(c, `${t("claimNo")} #${c.no}`); bs.appendChild(be);
+    if (c.resp && diff(c.resp.date,today())>=0){ const br=document.createElement("button"); br.type="button"; br.className="btn ghost small"; br.textContent=t("rc_btn"); br.onclick=()=>respCheck(i); bs.appendChild(br); }
     if (s.key==="noresp" || s.key==="paylate" || (s.key==="waitpay" && s.cut>0)){ const b2=document.createElement("button"); b2.type="button"; b2.className="btn small"; b2.textContent=t("adjPack"); b2.onclick=()=>docAdj(i); bs.appendChild(b2); }
     list.appendChild(el);
   });
@@ -729,7 +752,7 @@ function drawVariations(){
   box.innerHTML = `<div class="sec-head"><div><h2>${esc(t("vo_h"))}</h2><p class="meta" style="margin:4px 0 0;max-width:65ch">${esc(t("vo_sub"))}</p></div>
       <div class="meta">${esc(t("vo_tot",{a:money(sum("agreed")),b:money(sum("pending")),c:money(sum("disputed"))}))}</div></div>
     <div class="tblwrap"><table class="vo"><thead><tr><th>${esc(t("vo_no"))}</th><th>${esc(t("jobLbl"))}</th><th>${esc(t("vo_desc"))}</th><th>${esc(t("vo_by"))}</th><th>${esc(t("vo_amt"))}</th><th>${esc(t("vo_st"))}</th></tr></thead>
-    <tbody>${variations.map((v,k)=>`<tr><td>VO${v.no}</td><td>${esc(L(J(v.job).name))}</td><td>${esc(L(v.desc))}<div class="meta">${esc(fmt(v.date))}</div></td><td>${esc(L(v.by))}</td><td class="n">${money(v.amt)}</td>
+    <tbody>${variations.map((v,k)=>`<tr><td>VO${v.no}</td><td data-l="${esc(t("jobLbl"))}">${esc(L(J(v.job).name))}</td><td data-l="${esc(t("vo_desc"))}">${esc(L(v.desc))}<div class="meta">${esc(fmt(v.date))}</div></td><td data-l="${esc(t("vo_by"))}">${esc(L(v.by))}</td><td class="n" data-l="${esc(t("vo_amt"))}">${money(v.amt)}</td>
       <td><select data-vo="${k}" aria-label="${esc(t("vo_st"))}">${["agreed","pending","disputed"].map(st=>`<option value="${st}" ${v.st===st?"selected":""}>${esc(t("st_"+st))}</option>`).join("")}</select>
       <div><span class="status ${stCls[v.st]}">${esc(t("st_"+v.st))}</span></div></td></tr>`).join("")}</tbody></table></div>
     <form class="formcard" id="voForm" novalidate>
@@ -764,8 +787,9 @@ function viewIn(){
     const el = document.createElement("div"); el.className="card";
     el.innerHTML = `<div class="row"><div><h2>${esc(L(c.from))} · ${esc(t("claimNo"))} #${c.no}</h2>
       <div class="meta">${esc(L(j.name))} · ${esc(t("served"))} ${esc(fmt(c.served))}${c.how ? ` · ${esc(t("h_"+c.how))}` : ""}</div></div>
-      <div style="text-align:right"><div class="amt">${money(c.amt)}</div><span class="status ${s.cls}">${esc(s.label)}</span></div></div>
+      <div class="amtbox"><div class="amt">${money(c.amt)}</div><span class="status ${s.cls}">${esc(s.label)}</span></div></div>
       <div class="meta">${esc(t("inDue"))}: <b>${esc(fmt(s.due))}</b>${c.resp ? ` · ${S.lang==="zh"?"承認":"Admitted"} ${money(c.resp.admitted)}` : ""}</div>
+      ${c.how==="whatsapp" && !c.resp ? `<div class="meta">${esc(t("waSvc"))}</div>` : ""}
       <div class="btns"></div>`;
     if (!c.resp){ const b=document.createElement("button"); b.type="button"; b.className="btn small"; b.textContent=t("replyBtn"); b.onclick=()=>respForm(i); el.querySelector(".btns").appendChild(b); }
     else {
@@ -790,7 +814,7 @@ function viewRet(){
     const el = document.createElement("div"); el.className="card";
     el.innerHTML = `<div class="row"><div><h2>${esc(L(j.name))}</h2>
       <div class="meta">${esc(L(j.builder))} · <span class="status ${j.covered?"s-blue":"s-grey"}">${esc(j.covered?t("covered"):t("notCovered"))}</span></div></div>
-      <div style="text-align:right"><div class="amt">${money(r.amt)}</div><span class="status ${s.cls}">${esc(s.label)}</span></div></div>
+      <div class="amtbox"><div class="amt">${money(r.amt)}</div><span class="status ${s.cls}">${esc(s.label)}</span></div></div>
       <div class="meta">${esc(t("retDue"))}: <b>${esc(fmt(r.due))}</b> (${esc(L(r.stage))}) · ${esc(t("retLimit"))}: ${esc(fmt(s.limit))}${s.toLimit!=null && !r.paid && s.over>=0 ? ` · ${esc(left(s.toLimit))}`:""}</div>
       <div class="btns"></div>`;
     if (!r.paid && s.over >= 0){
@@ -809,7 +833,7 @@ function viewJobs(){
   jobs.forEach(j => {
     const el = document.createElement("div"); el.className="card";
     el.innerHTML = `<div class="row"><h2>${esc(L(j.name))}</h2><span class="status ${j.covered?"s-blue":"s-grey"}">${esc(j.covered?t("covered"):t("notCovered"))}</span></div>
-      <div class="meta">${esc(t("builder"))}: ${esc(L(j.builder))}<br>${esc(t("mainDate"))}: ${esc(fmt(j.mainDate))}<br>${esc(t("sum"))}: <span class="num">${money(j.sum)}</span>${j.covered ? `<br>${esc(t("terms",{r:rd(j.id), p:pd(j.id)}))}` : ""}</div>
+      <div class="meta">${esc(t("builder"))}: ${esc(L(j.builder))}<br>${esc(t("mainDate"))}: ${esc(fmt(j.mainDate))}<br>${esc(t("sum"))}: <span class="num">${money(j.sum)}</span></div>
       <div class="meta">${esc(L(j.why))}</div>`;
     list.appendChild(el);
   });
@@ -937,14 +961,14 @@ function logForm(){
     <p class="meta" id="lf-due" style="margin:0"></p>
     <div class="btns"><button class="btn" type="submit">${esc(t("logSave"))}</button></div></form>`, () => {
     const g = id => document.getElementById(id);
-    const showDue = () => { const sv = g("lf-served").value || today(); g("lf-due").textContent = `${t("inDue")}: ${fmt(add(sv,rd(g("lf-job").value)))}`; };
-    g("lf-served").addEventListener("input", showDue); g("lf-job").addEventListener("change", showDue); showDue();
+    const showDue = () => { const sv = g("lf-served").value || today(); g("lf-due").textContent = `${t("inDue")}: ${fmt(add(sv,30))}`; };
+    g("lf-served").addEventListener("input", showDue); showDue();
     g("lf").addEventListener("submit", e => {
       e.preventDefault();
       const name = g("lf-from").value.trim() || "—";
       const served = /^\d{4}-\d{2}-\d{2}$/.test(g("lf-served").value) ? g("lf-served").value : today();
       claimsIn.unshift({ from:{zh:name,en:name}, job:g("lf-job").value, no:Math.max(1,+g("lf-no").value||1), served, amt:Math.max(0,+g("lf-amt").value||0), resp:null, how:g("lf-how").value, ev:filesToEv(g("lf-files").files) });
-      closeModal(); S.tab = "in"; render(); toast(t("logged",{d:fmt(add(served,rd(g("lf-job").value)))}));
+      closeModal(); S.tab = "in"; render(); toast(t("logged",{d:fmt(add(served,30))}));
     });
   });
 }
@@ -1089,36 +1113,88 @@ function toast(msg){ const d=document.createElement("div"); d.className="toast";
 const bi = (zh,en) => `${esc(zh)}<span class="lbl"> / ${esc(en)}</span>`;
 const ln = (zh,en,val) => `<tr><td>${bi(zh,en)}</td><td>${val}</td></tr>`;
 
+function respItems(c){
+  const r = calc(c), due = add(c.served,30);
+  return [
+    [true, t("rc_id")],
+    [true, t("rc_amt")],
+    [true, t("rc_diff")],
+    [c.resp.calcShown !== false, t("rc_calc")],
+    [diff(c.resp.date, due) >= 0, t("rc_time",{d:fmt(due)})],
+  ];
+}
+function respOK(c){ return respItems(c).every(x => x[0]); }
+function respCheck(i){
+  const c = claimsOut[i], items = respItems(c), ok = items.every(x=>x[0]);
+  const html = `<p class="meta" style="margin-top:0">${esc(L(J(c.job).builder))} · ${esc(t("claimNo"))} #${c.no} · ${esc(fmt(c.resp.date))}</p>
+    <ul class="chk">${items.map(([g,txt]) => `<li><span class="${g?"ok":"bad"}" aria-hidden="true">${g?"✓":"!"}</span><span>${esc(txt)}</span></li>`).join("")}</ul>
+    <div class="verdict ${ok?"good":"warn"}">${esc(ok ? t("rc_good") : t("rc_bad"))}</div>`;
+  modal(t("rc_title"), html, null, {});
+}
+function claimItems(c){
+  const j = J(c.job), p = Math.min(1, c.cum / j.sum), k = x => Math.round(x/1000)*1000;
+  const E1 = k(j.sum*0.25), E2 = k(j.sum*0.20);
+  let F1 = Math.min(100, Math.round(p*110*10)/10), F2 = Math.min(100, Math.round(p*90*10)/10);
+  let G1 = Math.round(E1*F1/100), G2 = Math.round(E2*F2/100), Q3 = Math.floor(0.25*c.cum/380), G3 = Q3*380;
+  let rem = c.cum - G1 - G2 - G3;
+  if (rem < 0){ F1 = F2 = 0; G1 = G2 = 0; Q3 = 0; G3 = 0; rem = c.cum; }
+  return [
+    { zh:"配電箱及總掣房設備", en:"Distribution boards and switch room", E:E1, F:F1, G:G1 },
+    { zh:"照明系統", en:"Lighting system", E:E2, F:F2, G:G2 },
+    { zh:"電線槽及線管", en:"Cable trays and conduits", B:380, U:"米", D:Q3, G:G3 },
+    { zh:"電線敷設", en:"Cable installation", B:20, U:"米", D:rem/20, G:rem },
+  ];
+}
+const qtyFmt = n => n.toLocaleString("en-US", { maximumFractionDigits:2 });
 function docClaim(i){
-  const c = claimsOut[i], j = J(c.job), r = calc(c);
+  const c = claimsOut[i], j = J(c.job), r = calc(c), items = claimItems(c);
+  const vos = variations.filter(v => v.job === c.job), voSum = vos.reduce((x,v)=>x+v.amt,0);
+  const voRows = (vos.length && voSum === c.vari)
+    ? vos.map(v => `<tr><td>${bi(`加：工程變更 VO${v.no} ${v.desc.zh}`, `Add: variation VO${v.no} ${v.desc.en}`)}</td><td class="n">${money(v.amt)}</td></tr>`).join("")
+    : `<tr><td>${bi("加：工程變更（詳見工程變更清單）","Add: variations (see variation list)")}</td><td class="n">${money(c.vari)}</td></tr>`;
+  const svcZh = T.zh["h_"+(c.svc||"email")], svcEn = T.en["h_"+(c.svc||"email")], end = lastDay(c.period);
   const html = `<div class="paper">
     <h3>付款申索 PAYMENT CLAIM</h3>
-    <div class="c">根據《建造業付款保障條例》（第652章）作出<br>Made under the Construction Industry Security of Payment Ordinance (Cap. 652)</div>
+    <div class="c">格式按建造業議會《簡易分包合約協議》附件一<br>Layout follows CIC Simple Subcontract Agreement, Annex 1</div>
     <table>
-      ${ln("致","To",esc(j.builder.zh+" / "+j.builder.en))}
-      ${ln("申索方","Claimant",esc(COMPANY.zh+" / "+COMPANY.en))}
-      ${ln("合約","Contract",esc(`${j.name.zh} — 電力工程分判合約 / ${j.name.en} — electrical subcontract`))}
-      ${ln("申索編號","Claim no.",`#${c.no}`)}
-      ${ln("申索期間","Period",esc(fmtPeriodBoth(c.period)))}
-      ${ln("送達日期","Date served",esc(c.served))}
+      ${ln("分包合約編號","Subcontract no.",esc(j.ref || ("SC-"+j.id)))}
+      ${ln("付款申索期數","Claim no.",esc(`第 ${c.no} 期（截至 ${end}） / No. ${c.no} (up to ${end})`))}
+      ${ln("上家（付款方）","Payer",esc(j.builder.zh+" / "+j.builder.en))}
+      ${ln("下家（申索方）","Claimant",esc(COMPANY.zh+" / "+COMPANY.en))}
+      ${ln("工地","Site",esc(j.name.zh+" / "+j.name.en))}
+      ${ln("工程／工作概述","Works",esc("電力裝置工程 / Electrical installation"))}
+      ${ln("截數日","Billing date",esc(end))}
+      ${ln("送達","Served",esc(`${c.served} · ${svcZh} / ${svcEn}`))}
     </table>
-    <p><b>${bi("申索所涉工程","Work covered by this claim")}</b><br>
-    電力裝置工程，截至 ${esc(lastDay(c.period))} 已完成部分，詳見附件工程進度記錄及更改工程清單。<br>
-    <span class="lbl">Electrical installation works completed up to ${esc(lastDay(c.period))}, as detailed in the attached progress record and variation list.</span></p>
-    <p style="margin-bottom:4px"><b>${bi("金額計算方法","How the amount is calculated")}</b></p>
+    <p class="stmt">${bi("有關今期付款申索，所申索款額及相關明細載於下列對數表，下家謹此確認並提交予上家以評定今期認付款額。","The amount claimed this period and its breakdown are set out in the statement below, which the claimant confirms and submits to the payer for assessment.")}</p>
+    <p style="margin-bottom:4px"><b>${bi("對數表","Statement")}</b></p>
+    <table class="items">
+      <tr><th>(A) 工程／工作項目<br><span class="lbl">Item</span></th><th class="n">(B) 單價<br><span class="lbl">Rate</span></th><th>(C) 單位<br><span class="lbl">Unit</span></th><th class="n">(D) 累計完工數量<br><span class="lbl">Qty to date</span></th><th class="n">(E) 項目總價<br><span class="lbl">Item price</span></th><th class="n">(F) 累計完工 %<br><span class="lbl">% done</span></th><th class="n">(G) 累計完工價值<br><span class="lbl">Value to date</span></th></tr>
+      ${items.map(it => `<tr><td>${bi(it.zh, it.en)}<br><span class="lbl">${it.B ? "實量實度 / measured" : "總價承包 / lump sum"}</span></td>
+        <td class="n">${it.B ? money(it.B) : ""}</td><td>${it.U ? esc(it.U) : ""}</td><td class="n">${it.B ? qtyFmt(it.D) : ""}</td>
+        <td class="n">${it.E ? money(it.E) : ""}</td><td class="n">${it.E ? it.F.toFixed(1)+"%" : ""}</td><td class="n">${money(it.G)}</td></tr>`).join("")}
+      <tr class="tot"><td colspan="6">${bi("截至今期累計完工價值（合約工程）","Contract work to date")}</td><td class="n">${money(c.cum)}</td></tr>
+    </table>
     <table>
-      <tr><td>${bi("累計已完成合約工程","Contract work done to date")}</td><td class="n">${money(c.cum)}</td></tr>
-      <tr><td>${bi("更改工程","Variations")}</td><td class="n">${money(c.vari)}</td></tr>
-      <tr><td>${bi("小計","Subtotal")}</td><td class="n">${money(r.gross)}</td></tr>
-      <tr><td>${bi(`減：保留金（${j.retPct}%，上限為合約金額 ${j.capPct}%）`,`Less retention (${j.retPct}%, capped at ${j.capPct}% of contract sum)`)}</td><td class="n">(${money(r.ret)})</td></tr>
-      <tr><td>${bi("減：之前已付款項","Less previous payments")}</td><td class="n">(${money(c.prev)})</td></tr>
-      <tr class="tot"><td>${bi("本期申索金額","Amount claimed")}</td><td class="n">${money(r.amt)}</td></tr>
+      ${voRows}
+      <tr class="tot"><td>${bi("截至今期累計完工價值的總和","Total value to date")}</td><td class="n">${money(r.gross)}</td></tr>
+      <tr><td>${bi("減：扣減項目","Less: deductions")}</td><td class="n">HK$0</td></tr>
+      <tr><td>${bi(`減：保固金（保留金）${j.retPct}%，上限 ${money(j.sum*j.capPct/100)}`,`Less: retention ${j.retPct}%, capped at ${money(j.sum*j.capPct/100)}`)}</td><td class="n">(${money(r.ret)})</td></tr>
+      <tr><td>${bi("加：發放保固金","Add: retention released")}</td><td class="n">HK$0</td></tr>
+      <tr><td>${bi("減：截至上期累計已收之糧款","Less: amounts received to last period")}</td><td class="n">(${money(c.prev)})</td></tr>
+      <tr class="tot"><td>${bi("下家今期申索款額","Amount claimed this period")}</td><td class="n">${money(r.amt)}</td></tr>
     </table>
     <table>
-      ${ln("付款回應限期","Payment response due",esc(`${add(c.served,rd(c.job))}（送達後 ${rd(c.job)} 日 / ${rd(c.job)} days after service）`))}
-      ${ln("付款限期","Payment due",esc(`${add(c.served,pd(c.job))}（送達後 ${pd(c.job)} 日 / ${pd(c.job)} days after service）`))}
+      ${ln("付款回應限期","Payment response due",esc(`${add(c.served,30)}（送達後 30 日 / 30 days after service）`))}
+      ${ln("付款限期","Payment due",esc(`${add(c.served,60)}（送達後 60 日 / 60 days after service）`))}
     </table>
-    <p>${bi("簽署及公司蓋印","Signature and company chop")}：<span class="sig">______________________</span> &nbsp; ${bi("日期","Date")}：${esc(c.served)}</p>
+    <p>${bi(T.zh.declare, T.en.declare)}</p>
+    <table>
+      ${ln("姓名","Name",esc("陳先生 / Mr Chan"))}
+      ${ln("職位","Position",esc("董事 / Director"))}
+      ${ln("公司印章及簽署","Chop and signature",'<span class="sig">______________________</span>')}
+      ${ln("呈交日期","Date submitted",esc(c.served))}
+    </table>
     <div class="warn">${esc(t("draftNote"))}</div></div>`;
   modal(`${t("doc_claim")} #${c.no}`, html, null, { file:`付款申索-第${c.no}號` });
 }
@@ -1127,11 +1203,12 @@ function lastDay(p){ const [y,m] = p.split("-").map(Number); return iso(Date.UTC
 
 function docAdj(i){
   const c = claimsOut[i], j = J(c.job), s = outStatus(c), r = calc(c);
-  const disputed = c.resp && !s.lateResp ? r.amt - c.resp.admitted : r.amt;
+  const unpaidAdm = s.key==="paylate";
+  const disputed = unpaidAdm ? c.resp.admitted : c.resp ? r.amt - c.resp.admitted : r.amt;
   const rows = [
     [c.served, `送達付款申索 #${c.no}，金額 ${money(r.amt)}`, `Payment claim #${c.no} served, ${money(r.amt)}`],
     [s.respDue, c.resp ? `${c.resp.date} 收到付款回應：承認 ${money(c.resp.admitted)}` : "付款回應限期屆滿，未有收到回應", c.resp ? `Response received ${c.resp.date}: ${money(c.resp.admitted)} admitted` : "Response deadline passed, no response received"],
-    [s.payDue, "付款限期", "Payment due date"],
+    [s.payDue, unpaidAdm ? "付款限期屆滿，已承認金額未付" : "付款限期", unpaidAdm ? "Payment due date passed, admitted amount not paid" : "Payment due date"],
   ];
   const adjBy = s.adjBy || add(s.respDue,28);
   const html = `<div class="paper">
@@ -1140,11 +1217,11 @@ function docAdj(i){
     <p style="margin-bottom:4px"><b>${bi("1. 時間線","1. Timeline")}</b></p>
     <table>${rows.map(([d,zh,en])=>`<tr><td class="n">${esc(d)}</td><td>${bi(zh,en)}</td></tr>`).join("")}</table>
     <p style="margin-bottom:4px"><b>${bi("2. 爭議金額","2. Amount in dispute")}</b></p>
-    <table><tr class="tot"><td>${bi("申索金額減承認金額","Claimed less admitted")}</td><td class="n">${money(disputed)}</td></tr></table>
+    <table><tr class="tot"><td>${unpaidAdm ? bi("已承認但逾期未付","Admitted but not paid by the due date") : bi("申索金額減承認金額","Claimed less admitted")}</td><td class="n">${money(disputed)}</td></tr></table>
     <p style="margin-bottom:4px"><b>${bi("3. 要點","3. Key points")}</b></p>
     <ul style="margin:0;padding-left:20px">
-      ${c.resp && !s.lateResp ? `<li>${bi(`對方扣減理由：${L(c.resp.reason)||"—"}`,`Payer's reason: ${c.resp.reason?c.resp.reason.en:"—"}`)}</li>` :
-        `<li>${bi("對方未有喺限期內送達付款回應：可能唔可以喺審裁中提出抵銷（《條例》第652章，條文須律師確認）","No payment response served in time: payer may not be able to raise set-off in adjudication (Cap. 652; section to be confirmed by a lawyer)")}</li>`}
+      ${c.resp ? `<li>${bi(`對方扣減理由：${L(c.resp.reason)||"—"}`,`Payer's reason: ${c.resp.reason?c.resp.reason.en:"—"}`)}</li>` :
+        `<li>${bi("對方未有送達付款回應：不可以喺審裁中提出抵銷（第652章第21條）","No payment response served: payer cannot raise set-off in adjudication (Cap. 652 s.21)")}</li>`}
       <li>${bi(`開展審裁限期（估算）：${adjBy}`,`Start adjudication by (estimate): ${adjBy}`)}</li>
     </ul>
     <p style="margin-bottom:4px"><b>${bi("4. 附件清單","4. Documents attached")}</b></p>
@@ -1195,7 +1272,7 @@ function respForm(i){
       showCalc();
     };
     g("dedAdd").onclick = () => { deds.push({ reason:"", amt:0, ev:"" }); drawDeds(); };
-    const showDue = () => { const sv = g("rf-served").value || c.served; g("rf-due").textContent = `${t("inDue")}: ${fmt(add(sv,rd(c.job)))}`; };
+    const showDue = () => { const sv = g("rf-served").value || c.served; g("rf-due").textContent = `${t("inDue")}: ${fmt(add(sv,30))}`; };
     g("rf-served").addEventListener("input", showDue); g("rf-amt").addEventListener("input", showCalc); showDue(); drawDeds();
     g("rf").addEventListener("submit", e => {
       e.preventDefault();
@@ -1212,29 +1289,46 @@ function respForm(i){
   });
 }
 function docResp(i){
-  const c = claimsIn[i], j = J(c.job), r = c.resp;
+  const c = claimsIn[i], j = J(c.job), r = c.resp, due = add(c.served,30);
+  let deds = (r.deds || []).filter(d => d.amt > 0);
+  if (!deds.length && c.amt - r.admitted > 0) deds = [{ reason: L(r.reason) || "—", amt: c.amt - r.admitted, ev: "" }];
+  const diffAmt = r.admitted - c.amt, paren = n => n < 0 ? `(${money(-n)})` : money(n);
+  const works = c.works ? `${c.works.zh} / ${c.works.en}` : "分判工程 / Subcontract works";
   const html = `<div class="paper">
     <h3>付款回應 PAYMENT RESPONSE</h3>
-    <div class="c">根據《建造業付款保障條例》（第652章）作出<br>Made under the Construction Industry Security of Payment Ordinance (Cap. 652)</div>
+    <div class="c">格式按建造業議會《簡易分包合約協議》附件二<br>Layout follows CIC Simple Subcontract Agreement, Annex 2</div>
     <table>
-      ${ln("致","To",esc(c.from.zh+" / "+c.from.en))}
-      ${ln("付款方","Payer",esc(COMPANY.zh+" / "+COMPANY.en))}
-      ${ln("合約","Contract",esc(`${j.name.zh} / ${j.name.en}`))}
-      ${ln("回應付款申索","In response to payment claim",`#${c.no}（${esc(c.served)}）`)}
-      ${ln("回應日期","Date of response",esc(r.date))}
+      ${ln("分包合約編號","Subcontract no.",esc(c.ref || "—"))}
+      ${ln("付款回應期數","Response no.",esc(`第 ${c.no} 期（回應下家付款申索第 ${c.no} 期，${c.served} 收到） / No. ${c.no} (responding to claim No. ${c.no}, received ${c.served})`))}
+      ${ln("上家（付款方）","Payer",esc(COMPANY.zh+" / "+COMPANY.en))}
+      ${ln("下家（申索方）","Claimant",esc(c.from.zh+" / "+c.from.en))}
+      ${ln("工地","Site",esc(j.name.zh+" / "+j.name.en))}
+      ${ln("工程／工作概述","Works",esc(works))}
+    </table>
+    <p class="stmt">${bi("上家已評定下家今期付款申索，認付款額及評定明細載於下列對數表。","The payer has assessed the claimant's payment claim for this period. The admitted amount and the assessment are set out in the statement below.")}</p>
+    <p style="margin-bottom:4px"><b>${bi("經評定對數表","Assessed statement")}</b></p>
+    <table class="items">
+      <tr><th>${bi("項目","Item")}</th><th class="n">${bi("下家申索","Claimed")}</th><th class="n">${bi("經評定","Assessed")}</th><th>${bi("理由及證據","Reason and evidence")}</th></tr>
+      <tr><td>${bi(`下家付款申索第 ${c.no} 期所列工程`,`Works in claim No. ${c.no}`)}</td><td class="n">${money(c.amt)}</td><td class="n">${money(c.amt)}</td><td></td></tr>
+      ${deds.map((d,k) => `<tr><td>${bi(`減：扣減項目 ${k+1}`,`Less: deduction ${k+1}`)}</td><td class="n"></td><td class="n">(${money(d.amt)})</td><td>${esc(d.reason || "—")}${d.ev ? `<br><span class="lbl">${esc(d.ev)}</span>` : ""}</td></tr>`).join("")}
     </table>
     <table>
-      <tr><td>${bi("申索金額","Amount claimed")}</td><td class="n">${money(c.amt)}</td></tr>
-      <tr class="tot"><td>${bi("承認金額","Amount admitted")}</td><td class="n">${money(r.admitted)}</td></tr>
-      <tr><td>${bi("爭議金額","Amount disputed")}</td><td class="n">${money(c.amt-r.admitted)}</td></tr>
+      <tr class="tot"><td>${bi("上家今期認付款額","Amount admitted this period")}</td><td class="n">${money(r.admitted)}</td></tr>
+      <tr><td>${bi("減：下家今期申索款額","Less: amount claimed this period")}</td><td class="n">(${money(c.amt)})</td></tr>
+      <tr class="tot"><td>${bi("差額","Difference")}</td><td class="n">${paren(diffAmt)}</td></tr>
     </table>
-    <p>${bi(`承認金額計算方法：申索金額 ${money(c.amt)} 減爭議項目 ${money(c.amt-r.admitted)}（見下列理由）`,`How the admitted amount is calculated: amount claimed ${money(c.amt)} less disputed items ${money(c.amt-r.admitted)} (reasons below)`)}</p>
-    ${c.amt-r.admitted>0 ? (r.deds && r.deds.length ? `<p style="margin-bottom:4px"><b>${bi("扣減項目及理由","Deductions and reasons")}</b></p>
-    <table><tr><td><b>${bi("理由","Reason")}</b></td><td><b>${bi("證據","Evidence")}</b></td><td class="n"><b>${bi("金額","Amount")}</b></td></tr>
-    ${r.deds.map(d => `<tr><td>${esc(d.reason||"—")}</td><td>${esc(d.ev||"—")}</td><td class="n">${money(d.amt)}</td></tr>`).join("")}</table>`
-      : `<p><b>${bi("爭議理由","Reasons for disputing")}</b><br>${esc(r.reason||"—")}</p>`) : ""}
-    <p>${bi(`承認金額將於 ${add(c.served,pd(c.job))} 或之前支付。`,`The admitted amount will be paid on or before ${add(c.served,pd(c.job))}.`)}</p>
-    <p>${bi("簽署及公司蓋印","Signature and company chop")}：<span class="sig">______________________</span></p>
+    <p>${bi(`認付款額計算方法：申索款額 ${money(c.amt)} 減上列各項扣減，共 ${money(c.amt - r.admitted)}。`,`How the admitted amount is calculated: amount claimed ${money(c.amt)} less the deductions listed above, totalling ${money(c.amt - r.admitted)}.`)}</p>
+    <p>${bi(`認付款額將於 ${add(c.served,60)} 或之前支付。`,`The admitted amount will be paid on or before ${add(c.served,60)}.`)}</p>
+    <table>
+      ${ln("回應限期","Response due",esc(`${due}（收到申索後 30 日 / 30 days after the claim was received）`))}
+      ${ln("送達","Served",esc(`${r.date} · 電郵 / Email`))}
+    </table>
+    <table>
+      ${ln("姓名","Name",esc("陳先生 / Mr Chan"))}
+      ${ln("職位","Position",esc("董事 / Director"))}
+      ${ln("公司印章及簽署","Chop and signature",'<span class="sig">______________________</span>')}
+      ${ln("交回下家日期","Date returned to claimant",esc(r.date))}
+    </table>
     <div class="warn">${esc(t("draftNote"))}</div></div>`;
   modal(t("doc_resp"), html, null, { file:`付款回應-申索第${c.no}號`, back:() => respForm(i) });
 }
@@ -1259,7 +1353,7 @@ function docLetter(i){
 }
 
 /* ---------- controls ---------- */
-document.getElementById("langBtn").onclick = () => { S.lang = S.lang==="zh" ? "en" : "zh"; try{ localStorage.setItem("ontime-lang", S.lang); }catch(e){} render(); };
+document.getElementById("langBtn").onclick = () => { S.lang = S.lang==="zh" ? "en" : "zh"; try{ localStorage.setItem("steadyclaim-lang", S.lang); }catch(e){} render(); };
 document.querySelectorAll("[data-shift]").forEach(b => b.onclick = () => { const n=+b.dataset.shift; S.shift = n===0 ? 0 : S.shift + n; render(); });
 
 render();
