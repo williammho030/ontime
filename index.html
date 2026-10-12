@@ -223,6 +223,84 @@ details.more[open] summary{margin-bottom:10px}
 .mail .ok{background:var(--green-soft);color:var(--green);padding:10px 14px;font-weight:700;border-top:1px solid var(--line)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--brand);color:var(--on-brand);padding:9px 18px;border-radius:8px;font-size:15px;z-index:60}
 @media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--muted)}}
+
+/* Polish: soft grey canvas with white raised cards, quieter alerts, crisper controls. */
+:root{
+  --bg:#f3f5f8;
+  --surface-2:#f2f4f7;
+  --ink:#101c2b;
+  --line:#e2e7ed;
+  --brand:#0c2340;
+  --accent-hover:#094d91;
+  --red-soft:#fdf3f3; --amber-soft:#fff7ec; --green-soft:#edf7f1;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(16,28,43,.05),0 1px 3px rgba(16,28,43,.07);
+}
+body{-webkit-font-smoothing:antialiased}
+
+.bar{padding-block:14px}
+.brand{align-items:center;gap:12px}
+.brand::before{content:"穩";display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:8px;background:var(--on-brand);color:var(--brand);font-weight:900;font-size:19px;line-height:1}
+.brand b{font-size:20px;font-weight:700;letter-spacing:.03em}
+.brand span{opacity:.7;padding-left:12px;border-left:1px solid rgba(255,255,255,.25);line-height:1.3}
+.pill.demo{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);padding:4px 12px}
+.lang{border-color:rgba(255,255,255,.3);padding:4px 10px;font-weight:700}
+.lang:hover{background:rgba(255,255,255,.1)}
+
+.datestrip{background:var(--surface)}
+.datebar{padding-block:10px;font-size:13.5px}
+.chip{border-radius:6px;padding:3px 12px;font-size:13.5px}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]:hover{border-color:var(--accent)}
+header.top{box-shadow:0 1px 0 var(--line),0 2px 8px rgba(16,28,43,.04)}
+nav.tabs{border-top:1px solid var(--line);gap:4px}
+nav.tabs button{font-size:15px;padding:13px 12px 11px}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]:hover{color:var(--accent)}
+
+main{padding-block:28px 56px}
+h1{font-size:24px;font-weight:700;letter-spacing:.01em}
+h2{font-size:17px;font-weight:700}
+
+.todaycard{background:var(--surface);border-color:var(--line);box-shadow:var(--shadow);padding:20px 22px;gap:10px}
+.todaycard h2{font-size:18px;margin-bottom:4px}
+.card{box-shadow:var(--shadow);padding:18px 20px}
+@media (prefers-reduced-motion:no-preference){.card:hover{border-color:#c9d2dc}}
+
+.stat{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);padding:16px 18px}
+.stat .k{font-size:12.5px;letter-spacing:.02em}
+.stat .v{font-size:23px;margin-top:4px}
+.stat.warn{background:var(--surface);border-color:#f0caca;box-shadow:inset 0 3px 0 var(--red),var(--shadow)}
+
+.alert{grid-template-columns:4px 1fr auto;border:1px solid rgba(11,92,173,.14)}
+.alert.red{border-color:#f2d3d3}
+.alert.amber{border-color:#f4dfc2}
+.alert .body{padding:13px 0}
+.alert .dd{font-size:14.5px;opacity:.8}
+.alert .act{padding:13px 16px 13px 0}
+@media (max-width:600px){.alert{grid-template-columns:4px 1fr}.alert .act{padding:0 16px 13px 0}}
+
+.btn{border-radius:7px;padding:8px 16px;font-size:14.5px;box-shadow:0 1px 2px rgba(16,28,43,.12);transition:background-color .12s,border-color .12s}
+.btn:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.ghost{box-shadow:none;border-color:#b9cde3}
+.btn.ghost:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.btn.small{padding:6px 12px;font-size:13.5px}
+.btn.armed:hover:not(:disabled){background:#92430a;border-color:#92430a}
+.xbtn:hover{border-color:var(--muted);color:var(--ink)}
+
+.formcard{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);padding:20px}
+.formcard .calc,.formcard .chkbox{background:var(--surface-2)}
+input,select,textarea{border-color:#d3dae3;border-radius:7px}
+input:hover,select:hover,textarea:hover{border-color:#b6c1ce}
+.tblwrap{background:var(--surface);box-shadow:var(--shadow)}
+table.vo th{font-size:12.5px;letter-spacing:.02em}
+.mail{box-shadow:var(--shadow)}
+.status{font-size:12.5px;padding:2px 10px}
+details.more summary{font-size:15px}
+
+footer{border-top-color:var(--line);font-size:12.5px}
+.overlay{background:rgba(12,35,64,.5)}
+.modal{border-radius:12px;box-shadow:0 20px 50px rgba(12,35,64,.25)}
 </style>
 
 </head>
